@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Dissident Token Vault v2.5</title>
+    <title>Dissident Token Vault v3.0</title>
     <link rel="stylesheet" href="css/vault.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 </head>
@@ -14,7 +14,7 @@
         <div class="nav-brand">
             <span class="logo-icon">🔐</span>
             <span class="brand-text">Dissident<span class="gradient">Vault</span></span>
-            <span class="version">v2.5</span>
+            <span class="version">v3.0</span>
         </div>
 
         <div class="nav-actions">
@@ -41,6 +41,14 @@
 
             <button class="btn-icon" onclick="showSettings()" title="Settings">
                 ⚙️
+            </button>
+
+            <button class="btn-icon" onclick="VaultUI.showTemplateModal()" title="Apply Template">
+                📋
+            </button>
+
+            <button class="btn-icon" onclick="VaultDeploy.deployAll({ showPreview: true })" title="Deploy All Services">
+                🚀
             </button>
 
             <button class="btn-icon" onclick="lockVault()" title="Lock (Ctrl+L)">
@@ -378,10 +386,13 @@
     <!-- Scripts -->
     <script src="js/vault-core.js"></script>
     <script src="js/vault-ui.js"></script>
+    <script src="js/vault-intelligence.js"></script>
+    <script src="js/vault-deploy.js"></script>
     <script src="js/vault-health.js"></script>
     <script src="js/vault-discord.js"></script>
     <script src="js/vault-backup.js"></script>
     <script src="js/vault-railway-sync.js"></script>
+    <script src="js/vault-timeline.js"></script>
 
     <script>
         // Session timer update

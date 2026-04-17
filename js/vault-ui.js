@@ -98,55 +98,168 @@ const VaultUI = {
     },
 
     selectService(serviceId) {
-        this.currentService = serviceId;
-        this.renderServices();
-
-        const service = this.servicesConfig.services.find(s => s.id === serviceId);
-        if (!service) return;
-
-        // Use merged variables (shared + local, local wins)
-        const serviceData = VaultCore.getServiceVariables(serviceId);
-        const localData = this.vaultData?.services?.[serviceId] || {};
+        console.log('[VaultUI] ============================================');
+        console.log('[VaultUI] selectService() called with serviceId:', serviceId);
+        console.log('[VaultUI] ============================================');
         
-        // Hide welcome, show content
-        const welcomeScreen = document.getElementById('welcomeScreen');
-        const serviceContent = document.getElementById('serviceContent');
-        
-        if (welcomeScreen) welcomeScreen.classList.add('hidden');
-        if (serviceContent) serviceContent.classList.remove('hidden');
-
-        // Build content
-        let html = `
-            <div class="service-header">
-                <div class="service-title">
-                    <h2>${service.name}</h2>
-                    <p>${service.description || 'No description available'}</p>
-                </div>
-                <div class="service-actions">
-                    <button class="btn-secondary" onclick="VaultUI.toggleBulkEdit()">
-                        ${this.bulkEditMode ? '✓ Done' : '☐ Bulk Edit'}
-                    </button>
-                    <button class="btn-secondary" onclick="VaultUI.showSharedVariables()">
-                        🔗 Manage Shared Variables
-                    </button>
-                    <button class="btn-primary" onclick="VaultUI.deployService('${serviceId}')">
-                        🚀 Deploy to Railway
-                    </button>
-                </div>
-            </div>
-        `;
-
-        // Show shared variables section if any inherited
-        const sharedVars = this.getSharedVariablesForService(serviceId);
-        if (Object.keys(sharedVars).length > 0) {
-            html += `
-                <div class="shared-section">
-                    <h3 class="shared-title">📋 Inherited Shared Variables</h3>
-                    <p class="shared-desc">These variables are shared across all services. Change in one place, updates everywhere.</p>
-                    <div class="variables-grid shared-grid">
-            `;
+        // COMPREHENSIVE DEBUG LOGGING
+        try {
+            // Check services config
+            console.log('[VaultUI] servicesConfig:', this.servicesConfig);
+            if (!this.servicesConfig) {
+                console.error('[VaultUI] ERROR: servicesConfig is null or undefined');
+                this.showErrorState('Failed to load services configuration. Please refresh the page.');
+                return;
+            }
             
-            Object.entries(sharedVars).forEach(([key, value]) => {
+            if (!this.servicesConfig.services || !Array.isArray(this.servicesConfig.services)) {
+                console.error('[VaultUI] ERROR: servicesConfig.services is invalid:', this.servicesConfig.services);
+                this.showErrorState('Services configuration is corrupted. Please check vault-services.json.');
+                return;
+            }
+            
+            console.log('[VaultUI] Available services:', this.servicesConfig.services.map(s => s.id));
+            
+            // Find service
+            const service = this.servicesConfig.services.find(s => s.id === serviceId);
+            console.log('[VaultUI] Found service:', service);
+            
+            if (!service) {
+                console.error('[VaultUI] ERROR: Service not found:', serviceId);
+                this.showErrorState(`Service "${serviceId}" not found in configuration.`);
+                return;
+            }
+            
+            // Check vault data
+            console.log('[VaultUI] vaultData:', this.vaultData);
+            if (!this.vaultData) {
+                console.error('[VaultUI] ERROR: vaultData is null or undefined');
+                this.vaultData = VaultCore.loadVaultData() || { services: {}, shared: {} };
+                console.log('[VaultUI] Re-loaded vaultData:', this.vaultData);
+            }
+            
+            // Check DOM elements
+            const welcomeScreen = document.getElementById('welcomeScreen');
+            const serviceContent = document.getElementById('serviceContent');
+            
+            console.log('[VaultUI] welcomeScreen element:', welcomeScreen);
+            console.log('[VaultUI] serviceContent element:', serviceContent);
+            
+            if (!serviceContent) {
+                console.error('[VaultUI] ERROR: serviceContent element not found in DOM');
+                this.showErrorState('Page structure error. Please refresh the page.');
+                return;
+            }
+            
+            // SUCCESS - Continue with normal logic
+            this.currentService = serviceId;
+            this.renderServices();
+
+            // Use merged variables (shared + local, local wins)
+            let serviceData;
+            let localData;
+            
+            try {
+                serviceData = VaultCore.getServiceVariables(serviceId);
+                localData = this.vaultData?.services?.[serviceId] || {};
+                console.log('[VaultUI] serviceData:', serviceData);
+                console.log('[VaultUI] localData:', localData);
+            } catch (e) {
+                console.error('[VaultUI] ERROR loading service variables:', e);
+                serviceData = {};
+                localData = {};
+            }
+            
+            // Hide welcome, show content
+            if (welcomeScreen) welcomeScreen.classList.add('hidden');
+            serviceContent.classList.remove('hidden');
+
+            // Build content
+            this.buildServiceContent(serviceId, service, serviceData, localData);
+            
+            console.log('[VaultUI] Service rendered successfully');
+            
+        } catch (error) {
+            console.error('[VaultUI] CRITICAL ERROR in selectService:', error);
+            console.error('[VaultUI] Error stack:', error.stack);
+            this.showErrorState(`Error loading service: ${error.message}. Check console for details.`);
+        }
+    },
+    
+    // Extract content building to separate function
+    buildServiceContent(serviceId, service, serviceData, localData) {
+        try {
+            console.log('[VaultUI] Building content for:', service.name);
+            
+            let html = `
+                <div class="service-header">
+                    <div class="service-title">
+                        <h2>${service.name}</h2>
+                        <p>${service.description || 'No description available'}</p>
+                    </div>
+                    <div class="service-actions">
+                        <button class="btn-secondary" onclick="VaultUI.toggleBulkEdit()">
+                            ${this.bulkEditMode ? '✓ Done' : '☐ Bulk Edit'}
+                        </button>
+                        <button class="btn-secondary" onclick="VaultUI.showSharedVariables()">
+                            🔗 Manage Shared Variables
+                        </button>
+                        <button class="btn-primary" onclick="VaultUI.deployService('${serviceId}')">
+                            🚀 Deploy to Railway
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            // Show shared variables section if any inherited
+            const sharedVars = this.getSharedVariablesForService(serviceId);
+            console.log('[VaultUI] sharedVars:', sharedVars);
+            
+            if (Object.keys(sharedVars).length > 0) {
+                html += `
+                    <div class="shared-section">
+                        <h3 class="shared-title">📋 Inherited Shared Variables</h3>
+                        <p class="shared-desc">These variables are shared across all services. Change in one place, updates everywhere.</p>
+                        <div class="variables-grid shared-grid">
+                `;
+                
+                Object.entries(sharedVars).forEach(([key, value]) => {
+                    const isOverridden = key in localData;
+                    html += `
+                        <div class="variable-card shared-variable ${isOverridden ? 'overridden' : ''}">
+                            <div class="variable-header">
+                                <label>${key}</label>
+                                ${isOverridden ? '<span class="badge overridden">Local Override</span>' : '<span class="badge shared">Shared</span>'}
+                            </div>
+                            <p class="variable-desc">${isOverridden ? 'Local value overrides shared' : 'Inherited from shared variables'}</p>
+                            <div class="variable-input">
+                                <input type="text" 
+                                       value="${this.escapeHtml(value)}"
+                                       ${isOverridden ? '' : 'disabled'}
+                                       placeholder="${isOverridden ? 'Local override' : 'Edit in Shared Variables'}"
+                                       onchange="${isOverridden ? `VaultUI.updateVariable('${serviceId}', '${key}', this.value)` : ''}"
+                                >
+                            </div>
+                            ${isOverridden ? `
+                                <button class="btn-link" onclick="VaultUI.removeLocalOverride('${serviceId}', '${key}')">
+                                    ↩️ Revert to Shared Value
+                                </button>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+                
+                html += '</div></div>';
+            }
+
+            // Continue with variables rendering...
+            this.renderVariablesSection(service, serviceData, serviceId, html);
+            
+        } catch (error) {
+            console.error('[VaultUI] ERROR in buildServiceContent:', error);
+            throw error; // Re-throw to be caught by parent
+        }
+    },
                 const isOverridden = key in localData;
                 html += `
                     <div class="variable-card shared-variable ${isOverridden ? 'overridden' : ''}">
@@ -575,7 +688,114 @@ const VaultUI = {
         }, 5000);
     },
 
-    // Initialize Quick Search
+    // Show error state when service fails to load
+    showErrorState(message) {
+        const serviceContent = document.getElementById('serviceContent');
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        
+        if (welcomeScreen) welcomeScreen.classList.add('hidden');
+        if (serviceContent) {
+            serviceContent.classList.remove('hidden');
+            serviceContent.innerHTML = `
+                <div class="error-state">
+                    <div class="error-icon">⚠️</div>
+                    <h3>Error Loading Service</h3>
+                    <p>${message}</p>
+                    <div class="error-actions">
+                        <button class="btn-primary" onclick="location.reload()">
+                            🔄 Refresh Page
+                        </button>
+                        <button class="btn-secondary" onclick="VaultUI.showDebugModal()">
+                            🔍 Show Debug Info
+                        </button>
+                    </div>
+                    <div class="error-hint">
+                        <p>If this persists, check:</p>
+                        <ul>
+                            <li>Browser console for errors (F12)</li>
+                            <li>Vault is unlocked</li>
+                            <li>vault-services.json is accessible</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+        }
+    },
+
+    // Show debug information modal
+    showDebugModal() {
+        let modal = document.getElementById('debugModal');
+        if (!modal) {
+            const modalHtml = `
+                <div id="debugModal" class="modal">
+                    <div class="modal-overlay" onclick="VaultUI.closeDebugModal()"></div>
+                    <div class="modal-content debug-modal">
+                        <div class="modal-header">
+                            <h2>🔍 Debug Information</h2>
+                            <button class="btn-close" onclick="VaultUI.closeDebugModal()">✕</button>
+                        </div>
+                        <div class="modal-body" id="debugBody">
+                            <!-- Populated dynamically -->
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn-secondary" onclick="VaultUI.closeDebugModal()">Close</button>
+                            <button class="btn-primary" onclick="VaultUI.copyDebugInfo()">📋 Copy to Clipboard</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            modal = document.getElementById('debugModal');
+        }
+
+        // Gather debug info
+        const debugInfo = {
+            timestamp: new Date().toISOString(),
+            userAgent: navigator.userAgent,
+            url: window.location.href,
+            vaultCore: {
+                exists: typeof VaultCore !== 'undefined',
+                vaultExists: VaultCore?.vaultExists(),
+                hasSessionKey: !!VaultCore?.getSessionKey(),
+                diagnostics: VaultCore?.getDiagnostics()
+            },
+            vaultUI: {
+                servicesConfigLoaded: !!this.servicesConfig,
+                servicesCount: this.servicesConfig?.services?.length || 0,
+                vaultDataLoaded: !!this.vaultData,
+                currentService: this.currentService
+            },
+            localStorage: {
+                vaultMeta: !!localStorage.getItem('dissident_vault_meta'),
+                vaultData: !!localStorage.getItem('dissident_vault_data')
+            },
+            sessionStorage: {
+                sessionKey: !!sessionStorage.getItem('vault_session_key')
+            },
+            errors: window.vaultErrors || []
+        };
+
+        const body = document.getElementById('debugBody');
+        body.innerHTML = `
+            <pre class="debug-output">${JSON.stringify(debugInfo, null, 2)}</pre>
+        `;
+        
+        modal.classList.remove('hidden');
+    },
+
+    closeDebugModal() {
+        const modal = document.getElementById('debugModal');
+        if (modal) modal.classList.add('hidden');
+    },
+
+    copyDebugInfo() {
+        const debugOutput = document.querySelector('.debug-output');
+        if (debugOutput) {
+            navigator.clipboard.writeText(debugOutput.textContent)
+                .then(() => this.showToast('Debug info copied!', 'success'))
+                .catch(() => this.showToast('Failed to copy', 'error'));
+        }
+    },
     initQuickSearch() {
         // Create search modal HTML if not exists
         if (!document.getElementById('quickSearchModal')) {

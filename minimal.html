@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimal Vault - Backup</title>
+    <style>
+        body { 
+            font-family: system-ui, sans-serif; 
+            background: #111827; 
+            color: white; 
+            margin: 0; 
+            padding: 20px;
+            max-width: 100vw;
+            overflow-x: hidden;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { margin: 0 0 20px 0; }
+        .login-box, .service-box { 
+            background: #1f2937; 
+            padding: 20px; 
+            border-radius: 8px; 
+            margin-bottom: 20px;
+        }
+        input { 
+            width: 100%; 
+            padding: 10px; 
+            margin: 5px 0; 
+            background: #374151;
+            border: 1px solid #4b5563;
+            color: white;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button { 
+            padding: 10px 20px; 
+            background: #3b82f6; 
+            color: white; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #2563eb; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #374151; }
+        th { background: #374151; }
+        .hidden { display: none; }
+        .error { color: #ef4444; }
+        .success { color: #10b981; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Minimal Vault Backup</h1>
+        
+        <!-- Login -->
+        <div id="login" class="login-box">
+            <h3>Login</h3>
+            <input type="password" id="password" placeholder="Master Password">
+            <button onclick="login()">Login</button>
+            <p id="loginError" class="error"></p>
+            
+            <div id="setup" class="hidden">
+                <hr>
+                <h4>First Time Setup</h4>
+                <input type="password" id="newPass" placeholder="Create Password (min 8 chars)">
+                <input type="password" id="confirmPass" placeholder="Confirm Password">
+                <button onclick="setup()">Initialize</button>
+            </div>
+        </div>
+        
+        <!-- Vault -->
+        <div id="vault" class="hidden">
+            <div class="service-box">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3>Variables</h3>
+                    <button onclick="logout()">Logout</button>
+                </div>
+                
+                <!-- Add Variable -->
+                <div style="margin: 20px 0;">
+                    <input type="text" id="varName" placeholder="Variable Name (e.g., DISCORD_TOKEN)" style="width: 30%;">
+                    <input type="text" id="varValue" placeholder="Value" style="width: 50%;">
+                    <button onclick="addVariable()">Add</button>
+                </div>
+                
+                <!-- Variables Table -->
+                <div id="varTable">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Value</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="varList">
+                            <!-- Variables loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div style="margin-top: 20px;">
+                    <button onclick="exportEnv()">Export .env</button>
+                    <button onclick="importEnv()">Import .env</button>
+                    <button onclick="clearAll()">Clear All</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script>
+        let vaultKey = null;
+        let vaultData = { variables: {} };
+
+        // Check if vault exists
+        if (!localStorage.getItem('vault_meta')) {
+            document.getElementById('setup').classList.remove('hidden');
+        }
+
+        function hashPassword(password, salt) {
+            const key = CryptoJS.PBKDF2(password, salt, { keySize: 256/32, iterations: 10000 });
+            return CryptoJS.SHA256(key.toString()).toString();
+        }
+
+        function setup() {
+            const pass = document.getElementById('newPass').value;
+            const confirm = document.getElementById('confirmPass').value;
+            
+            if (pass.length < 8) {
+                alert('Password must be at least 8 characters');
+                return;
+            }
+            
+            if (pass !== confirm) {
+                alert('Passwords do not match');
+                return;
+            }
+            
+            const salt = CryptoJS.lib.WordArray.random(128/8).toString();
+            const keyHash = hashPassword(pass, salt);
+            
+            localStorage.setItem('vault_meta', JSON.stringify({
+                salt: salt,
+                keyHash: keyHash,
+                createdAt: new Date().toISOString()
+            }));
+            
+            alert('Vault initialized! Please login.');
+            document.getElementById('setup').classList.add('hidden');
+        }
+
+        function login() {
+            const password = document.getElementById('password').value;
+            const meta = JSON.parse(localStorage.getItem('vault_meta') || '{}');
+            
+            if (!meta.salt) {
+                document.getElementById('loginError').textContent = 'Vault not initialized. Use setup below.';
+                document.getElementById('setup').classList.remove('hidden');
+                return;
+            }
+            
+            const keyHash = hashPassword(password, meta.salt);
+            
+            if (keyHash !== meta.keyHash) {
+                document.getElementById('loginError').textContent = 'Invalid password';
+                return;
+            }
+            
+            vaultKey = CryptoJS.PBKDF2(password, meta.salt, { keySize: 256/32, iterations: 10000 }).toString();
+            
+            // Load vault
+            const encrypted = localStorage.getItem('vault_data');
+            if (encrypted) {
+                try {
+                    const bytes = CryptoJS.AES.decrypt(encrypted, vaultKey);
+                    vaultData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+                } catch (e) {
+                    vaultData = { variables: {} };
+                }
+            }
+            
+            document.getElementById('login').classList.add('hidden');
+            document.getElementById('vault').classList.remove('hidden');
+            renderVariables();
+        }
+
+        function logout() {
+            vaultKey = null;
+            vaultData = { variables: {} };
+            document.getElementById('vault').classList.add('hidden');
+            document.getElementById('login').classList.remove('hidden');
+            document.getElementById('password').value = '';
+        }
+
+        function saveVault() {
+            if (!vaultKey) return;
+            const encrypted = CryptoJS.AES.encrypt(JSON.stringify(vaultData), vaultKey).toString();
+            localStorage.setItem('vault_data', encrypted);
+        }
+
+        function addVariable() {
+            const name = document.getElementById('varName').value.trim().toUpperCase();
+            const value = document.getElementById('varValue').value;
+            
+            if (!name) {
+                alert('Please enter variable name');
+                return;
+            }
+            
+            vaultData.variables[name] = value;
+            saveVault();
+            
+            document.getElementById('varName').value = '';
+            document.getElementById('varValue').value = '';
+            
+            renderVariables();
+        }
+
+        function renderVariables() {
+            const tbody = document.getElementById('varList');
+            tbody.innerHTML = Object.entries(vaultData.variables).map(([name, value]) => `
+                <tr>
+                    <td>${name}</td>
+                    <td>${value ? '********' : '(empty)'}</td>
+                    <td>
+                        <button onclick="editVariable('${name}')">Edit</button>
+                        <button onclick="deleteVariable('${name}')">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function editVariable(name) {
+            const newValue = prompt(`Enter new value for ${name}:`, vaultData.variables[name] || '');
+            if (newValue !== null) {
+                vaultData.variables[name] = newValue;
+                saveVault();
+                renderVariables();
+            }
+        }
+
+        function deleteVariable(name) {
+            if (confirm(`Delete ${name}?`)) {
+                delete vaultData.variables[name];
+                saveVault();
+                renderVariables();
+            }
+        }
+
+        function clearAll() {
+            if (confirm('Clear all variables? This cannot be undone.')) {
+                vaultData.variables = {};
+                saveVault();
+                renderVariables();
+            }
+        }
+
+        function exportEnv() {
+            let env = '# Dissident Vault Export\n';
+            env += `# Generated: ${new Date().toISOString()}\n\n`;
+            
+            Object.entries(vaultData.variables).forEach(([name, value]) => {
+                if (value) env += `${name}=${value}\n`;
+            });
+            
+            const blob = new Blob([env], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'vault-export.env';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importEnv() {
+            const content = prompt('Paste .env content:');
+            if (!content) return;
+            
+            const lines = content.split('\n');
+            let count = 0;
+            
+            lines.forEach(line => {
+                if (line.includes('=') && !line.startsWith('#')) {
+                    const [name, ...valueParts] = line.split('=');
+                    const value = valueParts.join('=').trim();
+                    if (name && value) {
+                        vaultData.variables[name.trim()] = value;
+                        count++;
+                    }
+                }
+            });
+            
+            saveVault();
+            renderVariables();
+            alert(`Imported ${count} variables`);
+        }
+    </script>
+</body>
+</html>

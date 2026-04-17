@@ -1,19 +1,21 @@
 # Dissident Token Vault - Secure Secret Management
 FROM nginx:alpine
 
-# Copy all static files
+# Copy main HTML files
 COPY index.html /usr/share/nginx/html/
+COPY login.html /usr/share/nginx/html/
+COPY vault.html /usr/share/nginx/html/
+COPY minimal.html /usr/share/nginx/html/
+
+# Copy config files
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY vault-services.json /usr/share/nginx/html/
 
 # Copy JavaScript files
-COPY vault-services.json /usr/share/nginx/html/
-COPY vault-data.js /usr/share/nginx/html/
-COPY vault-railway.js /usr/share/nginx/html/
-COPY vault-railway-api.js /usr/share/nginx/html/
-COPY vault-sync.js /usr/share/nginx/html/
-COPY vault-complete-sync.js /usr/share/nginx/html/
-COPY vault-github.js /usr/share/nginx/html/
-COPY vault-railway-auto.js /usr/share/nginx/html/
+COPY js/ /usr/share/nginx/html/js/
+
+# Copy CSS files
+COPY css/ /usr/share/nginx/html/css/
 
 # Expose port 8080
 EXPOSE 8080

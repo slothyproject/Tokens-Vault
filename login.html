@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Dissident Token Vault - Login</title>
+    <link rel="stylesheet" href="css/vault.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+</head>
+<body class="login-page">
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="logo">
+                    <span class="logo-icon">🔐</span>
+                    <h1>Dissident<span class="gradient">Vault</span></h1>
+                </div>
+                <p class="subtitle">Enterprise Secret Management</p>
+            </div>
+
+            <div id="loginForm" class="login-body">
+                <div class="form-group">
+                    <label for="masterPassword">Master Password</label>
+                    <div class="password-input">
+                        <input type="password" id="masterPassword" placeholder="Enter your master password">
+                        <button type="button" class="toggle-password" onclick="togglePassword()">👁️</button>
+                    </div>
+                </div>
+
+                <button class="btn-primary btn-large" onclick="unlockVault()">
+                    <span class="btn-icon">🔓</span>
+                    Unlock Vault
+                </button>
+
+                <div id="firstTimeSetup" class="first-time hidden">
+                    <div class="divider">
+                        <span>First Time Setup</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Create Master Password</label>
+                        <input type="password" id="newPassword" placeholder="Minimum 8 characters">
+                        <div class="password-strength">
+                            <div class="strength-bar" id="strengthBar"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Confirm Password</label>
+                        <input type="password" id="confirmPassword" placeholder="Re-enter password">
+                    </div>
+
+                    <button class="btn-primary btn-large" onclick="setupVault()">
+                        <span class="btn-icon">🚀</span>
+                        Initialize Vault
+                    </button>
+                </div>
+
+                <div id="loginError" class="error-message hidden"></div>
+            </div>
+
+            <div class="login-footer">
+                <p>🔒 Client-side AES-256 encryption</p>
+                <p>🛡️ Your secrets never leave your device</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/vault-core.js"></script>
+    <script>
+        // Check if first time
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!VaultCore.vaultExists()) {
+                document.getElementById('firstTimeSetup').classList.remove('hidden');
+            }
+        });
+
+        function togglePassword() {
+            const input = document.getElementById('masterPassword');
+            input.type = input.type === 'password' ? 'text' : 'password';
+        }
+
+        function setupVault() {
+            const newPass = document.getElementById('newPassword').value;
+            const confirmPass = document.getElementById('confirmPassword').value;
+
+            if (newPass.length < 8) {
+                showError('Password must be at least 8 characters');
+                return;
+            }
+
+            if (newPass !== confirmPass) {
+                showError('Passwords do not match');
+                return;
+            }
+
+            VaultCore.initialize(newPass);
+            window.location.href = 'vault.html';
+        }
+
+        function unlockVault() {
+            const password = document.getElementById('masterPassword').value;
+            const result = VaultCore.unlock(password);
+
+            if (result.success) {
+                window.location.href = 'vault.html';
+            } else {
+                showError(result.error);
+            }
+        }
+
+        function showError(message) {
+            const errorEl = document.getElementById('loginError');
+            errorEl.textContent = message;
+            errorEl.classList.remove('hidden');
+            setTimeout(() => errorEl.classList.add('hidden'), 5000);
+        }
+
+        // Password strength indicator
+        document.getElementById('newPassword')?.addEventListener('input', (e) => {
+            const bar = document.getElementById('strengthBar');
+            const length = e.target.value.length;
+            const strength = Math.min(length / 12 * 100, 100);
+            bar.style.width = strength + '%';
+            bar.style.background = length < 8 ? '#ef4444' : length < 12 ? '#f59e0b' : '#10b981';
+        });
+    </script>
+</body>
+</html>

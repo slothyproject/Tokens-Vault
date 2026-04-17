@@ -24,7 +24,16 @@ const VaultUI = {
         await this.loadServicesConfig();
         this.vaultData = VaultCore.loadVaultData();
         this.renderServices();
-        this.initQuickSearch(); // Initialize quick search
+        this.initQuickSearch();
+        
+        // Subscribe to shared variable change events
+        VaultCore.on('sharedVariableChanged', (data) => {
+            this.handleSharedVariableChanged(data);
+        });
+        
+        VaultCore.on('sharedVariableDeleted', (data) => {
+            this.handleSharedVariableDeleted(data);
+        });
     },
 
     async loadServicesConfig() {
@@ -1214,6 +1223,63 @@ const VaultUI = {
             setTimeout(() => {
                 this.showToast(s.suggestion, 'warning', 8000);
             }, 500);
+        });
+    },
+
+    // Handle shared variable change events
+    handleSharedVariableChanged(data) {
+        console.log('[VaultUI] Shared variable changed:', data);
+        
+        // Refresh current service view if affected
+        if (this.currentService && data.affectedServices.includes(this.currentService)) {
+            // Check if this service doesn't have local override
+            const hasLocalOverride = this.vaultData?.services?.[this.currentService]?.[data.key] !== undefined;
+            
+            if (!hasLocalOverride) {
+                // Re-render service view
+                this.selectService(this.currentService);
+                
+                // Visual feedback
+                setTimeout(() => {
+                    const card = document.querySelector(`#var-${data.key}`)?.closest('.variable-card');
+                    if (card) {
+                        card.classList.add('shared-updated');
+                        setTimeout(() => card.classList.remove('shared-updated'), 2000);
+                    }
+                }, 100);
+                
+                // Show notification
+                const otherServices = data.affectedServices.filter(s => s !== this.currentService).length;
+                const msg = otherServices > 0 
+                    ? `Updated ${data.key} (affects ${data.affectedServices.length} services)`
+                    : `Updated ${data.key}`;
+                this.showToast(msg, 'success');
+            }
+        }
+        
+        // Update sidebar to show affected services
+        this.highlightAffectedServices(data.affectedServices);
+    },
+    
+    // Handle shared variable deletion events
+    handleSharedVariableDeleted(data) {
+        console.log('[VaultUI] Shared variable deleted:', data);
+        
+        // Refresh current service view if affected
+        if (this.currentService && data.affectedServices.includes(this.currentService)) {
+            this.selectService(this.currentService);
+            this.showToast(`${data.key} removed from shared variables`, 'info');
+        }
+    },
+    
+    // Highlight services affected by shared variable changes
+    highlightAffectedServices(serviceIds) {
+        serviceIds.forEach(serviceId => {
+            const btn = document.querySelector(`[onclick="VaultUI.selectService('${serviceId}')"]`);
+            if (btn && serviceId !== this.currentService) {
+                btn.classList.add('has-updates');
+                setTimeout(() => btn.classList.remove('has-updates'), 3000);
+            }
         });
     }
 };

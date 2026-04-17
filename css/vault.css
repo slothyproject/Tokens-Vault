@@ -1331,6 +1331,42 @@ input::placeholder {
     flex: 0 0 40%;
 }
 
+/* Auto-Refresh Animations */
+.shared-updated {
+    animation: flash-green 2s ease;
+}
+
+@keyframes flash-green {
+    0% {
+        background: rgba(16, 185, 129, 0.3);
+        border-left-color: var(--accent-green);
+    }
+    100% {
+        background: transparent;
+        border-left-color: var(--border-color);
+    }
+}
+
+.service-btn.has-updates {
+    animation: pulse-update 3s ease;
+}
+
+@keyframes pulse-update {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 8px rgba(245, 158, 11, 0);
+    }
+}
+
+.service-btn.has-updates::after {
+    content: '•';
+    color: #f59e0b;
+    margin-left: 8px;
+    font-size: 20px;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .sidebar {

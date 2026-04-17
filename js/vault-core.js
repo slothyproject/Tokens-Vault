@@ -17,6 +17,44 @@ const VaultCore = {
         isLocked: false
     },
 
+    // Event system for reactive updates
+    events: {
+        listeners: {},
+        
+        on(event, callback) {
+            if (!this.listeners[event]) this.listeners[event] = [];
+            this.listeners[event].push(callback);
+        },
+        
+        off(event, callback) {
+            if (this.listeners[event]) {
+                this.listeners[event] = this.listeners[event].filter(cb => cb !== callback);
+            }
+        },
+        
+        emit(event, data) {
+            if (this.listeners[event]) {
+                this.listeners[event].forEach(callback => {
+                    try {
+                        callback(data);
+                    } catch (e) {
+                        console.error('[VaultCore] Event handler error:', e);
+                    }
+                });
+            }
+        }
+    },
+
+    // Subscribe to an event
+    on(event, callback) {
+        this.events.on(event, callback);
+    },
+    
+    // Unsubscribe from an event
+    off(event, callback) {
+        this.events.off(event, callback);
+    },
+
     // Start session timeout monitoring
     startSessionTimeout() {
         // Reset last activity
@@ -459,6 +497,15 @@ const VaultCore = {
         
         this.saveVaultData(data);
         
+        // Emit event for reactive updates
+        this.events.emit('sharedVariableChanged', {
+            key,
+            value,
+            oldValue,
+            isNew: !oldValue,
+            affectedServices: this.getServicesUsingVariable(key)
+        });
+        
         // Add to history
         this.addHistory('shared', oldValue ? 'updated' : 'created', { 
             key, 
@@ -479,9 +526,34 @@ const VaultCore = {
         
         this.saveVaultData(data);
         
+        // Emit event for reactive updates
+        this.events.emit('sharedVariableDeleted', {
+            key,
+            oldValue,
+            affectedServices: this.getServicesUsingVariable(key)
+        });
+        
         this.addHistory('shared', 'deleted', { key, oldValue });
         
         return true;
+    },
+    
+    // Get all services that use a specific variable
+    getServicesUsingVariable(key) {
+        const data = this.loadVaultData();
+        if (!data) return [];
+        
+        const services = [];
+        
+        // Check each service
+        Object.entries(data.services || {}).forEach(([serviceId, variables]) => {
+            // Service has this variable locally OR inherits from shared
+            if (variables[key] || data.shared?.[key]) {
+                services.push(serviceId);
+            }
+        });
+        
+        return services;
     },
 
     // History management

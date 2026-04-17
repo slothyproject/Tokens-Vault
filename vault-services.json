@@ -1,0 +1,248 @@
+{
+  "vaultVersion": "2.0.0",
+  "lastUpdated": "2026-04-17T18:30:00Z",
+  "services": [
+    {
+      "id": "dissident-website",
+      "name": "Dissident Website",
+      "description": "Frontend static website",
+      "type": "static",
+      "railwayService": "Dissident-Website",
+      "deployUrl": "https://dissident.mastertibbles.co.uk",
+      "railwayUrl": "https://dissident-website-production.up.railway.app",
+      "port": 8080,
+      "icon": "web",
+      "color": "blue",
+      "categories": [
+        {
+          "id": "general",
+          "name": "General",
+          "icon": "settings"
+        },
+        {
+          "id": "deployment",
+          "name": "Deployment",
+          "icon": "rocket"
+        }
+      ],
+      "variables": [
+        {
+          "key": "FRONTEND_URL",
+          "description": "Public URL of the website",
+          "type": "url",
+          "required": true,
+          "category": "general",
+          "default": "https://dissident.mastertibbles.co.uk"
+        },
+        {
+          "key": "API_BASE_URL",
+          "description": "Backend API base URL",
+          "type": "url",
+          "required": true,
+          "category": "general",
+          "default": "https://dissident-api-backend-production.up.railway.app"
+        },
+        {
+          "key": "NODE_ENV",
+          "description": "Node environment",
+          "type": "select",
+          "required": true,
+          "category": "deployment",
+          "options": ["development", "production"],
+          "default": "production"
+        },
+        {
+          "key": "PORT",
+          "description": "Internal port",
+          "type": "number",
+          "required": true,
+          "category": "deployment",
+          "default": "8080"
+        }
+      ]
+    },
+    {
+      "id": "dissident-backend",
+      "name": "Dissident API Backend",
+      "description": "Node.js API with Discord OAuth",
+      "type": "node",
+      "railwayService": "dissident-api-backend",
+      "deployUrl": "https://dissident-api-backend-production.up.railway.app",
+      "railwayUrl": "https://dissident-api-backend-production.up.railway.app",
+      "port": 3000,
+      "database": "postgresql",
+      "icon": "server",
+      "color": "purple",
+      "categories": [
+        {
+          "id": "discord",
+          "name": "Discord",
+          "icon": "discord"
+        },
+        {
+          "id": "security",
+          "name": "Security",
+          "icon": "shield"
+        },
+        {
+          "id": "database",
+          "name": "Database",
+          "icon": "database"
+        },
+        {
+          "id": "deployment",
+          "name": "Deployment",
+          "icon": "rocket"
+        }
+      ],
+      "variables": [
+        {
+          "key": "DISCORD_CLIENT_ID",
+          "description": "Discord Application Client ID",
+          "type": "string",
+          "required": true,
+          "category": "discord",
+          "default": "1493639167526174830"
+        },
+        {
+          "key": "DISCORD_CLIENT_SECRET",
+          "description": "Discord Application Client Secret",
+          "type": "secret",
+          "required": true,
+          "category": "discord"
+        },
+        {
+          "key": "DISCORD_BOT_TOKEN",
+          "description": "Discord Bot Token",
+          "type": "secret",
+          "required": true,
+          "category": "discord"
+        },
+        {
+          "key": "JWT_SECRET",
+          "description": "JWT Signing Secret (generate strong random)",
+          "type": "secret",
+          "required": true,
+          "category": "security"
+        },
+        {
+          "key": "FRONTEND_URL",
+          "description": "Frontend URL for CORS",
+          "type": "url",
+          "required": true,
+          "category": "deployment",
+          "default": "https://dissident.mastertibbles.co.uk"
+        },
+        {
+          "key": "DATABASE_URL",
+          "description": "PostgreSQL connection string",
+          "type": "secret",
+          "required": false,
+          "category": "database"
+        },
+        {
+          "key": "NODE_ENV",
+          "description": "Node environment",
+          "type": "select",
+          "required": true,
+          "category": "deployment",
+          "options": ["development", "production"],
+          "default": "production"
+        },
+        {
+          "key": "PORT",
+          "description": "Internal port",
+          "type": "number",
+          "required": true,
+          "category": "deployment",
+          "default": "3000"
+        }
+      ]
+    },
+    {
+      "id": "discord-bot",
+      "name": "Discord Bot",
+      "description": "Discord bot configuration",
+      "type": "discord-bot",
+      "railwayService": "dissident-api-backend",
+      "deployedIn": "backend",
+      "icon": "robot",
+      "color": "blurple",
+      "categories": [
+        {
+          "id": "bot",
+          "name": "Bot Configuration",
+          "icon": "bot"
+        }
+      ],
+      "variables": [
+        {
+          "key": "BOT_TOKEN",
+          "description": "Discord Bot Token",
+          "type": "secret",
+          "required": true,
+          "category": "bot"
+        },
+        {
+          "key": "CLIENT_ID",
+          "description": "Discord Application Client ID",
+          "type": "string",
+          "required": true,
+          "category": "bot",
+          "default": "1493639167526174830"
+        }
+      ]
+    },
+    {
+      "id": "tokens-vault",
+      "name": "Token Vault",
+      "description": "This vault service itself",
+      "type": "static",
+      "railwayService": "dissident-tokens-vault",
+      "deployUrl": "https://dissidenttokens.mastertibbles.co.uk",
+      "railwayUrl": "https://dissident-tokens-vault-production.up.railway.app",
+      "port": 8080,
+      "icon": "vault",
+      "color": "green",
+      "categories": [
+        {
+          "id": "general",
+          "name": "General",
+          "icon": "settings"
+        }
+      ],
+      "variables": [
+        {
+          "key": "NODE_ENV",
+          "description": "Environment",
+          "type": "select",
+          "required": true,
+          "category": "general",
+          "options": ["development", "production"],
+          "default": "production"
+        },
+        {
+          "key": "PORT",
+          "description": "Internal port",
+          "type": "number",
+          "required": true,
+          "category": "general",
+          "default": "8080"
+        }
+      ]
+    }
+  ],
+  "railway": {
+    "projectId": "resplendent-fulfillment",
+    "projectName": "resplendent-fulfillment",
+    "environment": "production"
+  },
+  "features": {
+    "autoDeploy": true,
+    "syncToConfig": true,
+    "syncToRailway": true,
+    "keepHistory": true,
+    "maxHistoryVersions": 10,
+    "masterPasswordRequired": true
+  }
+}

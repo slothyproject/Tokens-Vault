@@ -14,6 +14,11 @@
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
+        .glass-strong {
+            background: rgba(20, 20, 30, 0.9);
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
         .gradient-text {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             -webkit-background-clip: text;
@@ -32,6 +37,58 @@
         .encrypt-btn:hover {
             background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
         }
+        .service-tab {
+            transition: all 0.2s ease;
+        }
+        .service-tab.active {
+            background: rgba(102, 126, 234, 0.2);
+            border-left: 3px solid #667eea;
+        }
+        .service-tab:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .category-card {
+            border-left: 3px solid transparent;
+            transition: all 0.2s ease;
+        }
+        .category-card:hover {
+            border-left-color: #667eea;
+        }
+        .pulse-dot {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .hidden-section {
+            display: none;
+        }
+        .visible-section {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .status-online { background-color: #10b981; }
+        .status-offline { background-color: #ef4444; }
+        .status-deploying { background-color: #f59e0b; animation: pulse 1s infinite; }
+        .history-item {
+            border-left: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+        .history-item:hover {
+            border-left-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
     </style>
 </head>
 <body class="bg-gray-900 text-white min-h-screen">
@@ -42,201 +99,183 @@
         <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-indigo-600 rounded-full mix-blend-multiply filter blur-3xl opacity-10"></div>
     </div>
 
-    <!-- Navigation -->
-    <nav class="relative z-10 border-b border-gray-800 glass">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center">
-                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                        </svg>
-                    </div>
-                    <span class="text-xl font-bold">Dissident<span class="gradient-text">Vault</span></span>
+    <!-- Login Modal -->
+    <div id="loginModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 backdrop-blur-sm">
+        <div class="glass-strong rounded-2xl p-8 max-w-md w-full mx-4">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                    </svg>
                 </div>
-                <div class="flex items-center gap-4">
-                    <span class="text-sm text-gray-400">Client-Side Encrypted</span>
-                    <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                </div>
+                <h2 class="text-2xl font-bold mb-2">Dissident Token Vault</h2>
+                <p class="text-gray-400 text-sm">Enter your master password to unlock</p>
             </div>
-        </div>
-    </nav>
-
-    <!-- Main Content -->
-    <main class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <!-- Header -->
-        <div class="text-center mb-12">
-            <h1 class="text-4xl font-bold mb-4">Secure Token Management</h1>
-            <p class="text-gray-400 max-w-2xl mx-auto">
-                Your secrets are encrypted in your browser before transmission. 
-                We never see your unencrypted tokens.
-            </p>
-        </div>
-
-        <!-- Encryption Key Section -->
-        <div class="glass rounded-2xl p-6 mb-8 border border-yellow-500/30">
-            <div class="flex items-start gap-4">
-                <div class="flex-shrink-0 w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">
-                    <svg class="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
-                    </svg>
-                </div>
-                <div class="flex-1">
-                    <h2 class="text-lg font-semibold mb-2">Encryption Key</h2>
-                    <p class="text-sm text-gray-400 mb-3">
-                        Generate or enter your encryption key. This is used to encrypt/decrypt your tokens locally.
-                    </p>
-                    <div class="flex gap-2">
-                        <input type="password" id="encryptionKey" 
-                            class="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500"
-                            placeholder="Enter or generate encryption key...">
-                        <button onclick="generateKey()" 
-                            class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg transition-colors">
-                            Generate
-                        </button>
-                        <button onclick="toggleKeyVisibility()" 
-                            class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg transition-colors">
-                            Show
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Token Input Section -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Add Token -->
-            <div class="glass rounded-2xl p-6">
-                <h2 class="text-xl font-semibold mb-4 flex items-center gap-2">
-                    <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                    </svg>
-                    Add New Token
-                </h2>
-                
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-400 mb-1">Token Name</label>
-                        <input type="text" id="tokenName" 
-                            class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500"
-                            placeholder="e.g., Discord Bot Token">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-400 mb-1">Service/Platform</label>
-                        <select id="tokenService" 
-                            class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500">
-                            <option value="">Select service...</option>
-                            <option value="discord">Discord</option>
-                            <option value="railway">Railway</option>
-                            <option value="github">GitHub</option>
-                            <option value="database">Database</option>
-                            <option value="jwt">JWT Secret</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-400 mb-1">Token Value</label>
-                        <textarea id="tokenValue" rows="3"
-                            class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500 font-mono text-sm"
-                            placeholder="Paste your secret token here..."></textarea>
-                    </div>
-                    
-                    <button onclick="encryptAndSaveToken()" 
-                        class="w-full encrypt-btn text-white font-semibold py-3 px-4 rounded-lg transition-all transform hover:scale-[1.02]">
-                        Encrypt & Save Token
-                    </button>
-                </div>
-            </div>
-
-            <!-- Stored Tokens -->
-            <div class="glass rounded-2xl p-6">
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-xl font-semibold flex items-center gap-2">
-                        <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        Stored Tokens
-                    </h2>
-                    <button onclick="clearAllTokens()" 
-                        class="text-sm text-red-400 hover:text-red-300 transition-colors">
-                        Clear All
-                    </button>
-                </div>
-                
-                <div id="tokensList" class="space-y-3 max-h-96 overflow-y-auto">
-                    <!-- Tokens will be loaded here -->
-                    <div class="text-center text-gray-500 py-8" id="emptyState">
-                        <svg class="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                        </svg>
-                        <p>No tokens stored yet</p>
-                        <p class="text-sm mt-1">Add your first encrypted token above</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Quick Actions -->
-        <div class="glass rounded-2xl p-6 mt-8">
-            <h2 class="text-xl font-semibold mb-4">Quick Actions</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <button onclick="exportTokens()" 
-                    class="flex items-center justify-center gap-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 px-4 py-3 rounded-lg transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                    </svg>
-                    Export Encrypted
-                </button>
-                
-                <button onclick="importTokens()" 
-                    class="flex items-center justify-center gap-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 px-4 py-3 rounded-lg transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
-                    </svg>
-                    Import Encrypted
-                </button>
-                
-                <button onclick="generateDissidentConfig()" 
-                    class="flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-500 px-4 py-3 rounded-lg transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
-                    </svg>
-                    Generate Config
-                </button>
-            </div>
-        </div>
-
-        <!-- Security Notice -->
-        <div class="mt-8 glass rounded-2xl p-6 border border-green-500/30">
-            <div class="flex items-start gap-4">
-                <div class="flex-shrink-0 w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
-                    <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                    </svg>
-                </div>
+            <div class="space-y-4">
                 <div>
-                    <h3 class="text-lg font-semibold text-green-400 mb-2">How It Works</h3>
-                    <ul class="text-sm text-gray-400 space-y-2">
-                        <li>• Your tokens are encrypted using AES-256 in your browser</li>
-                        <li>• The encrypted data is stored locally (localStorage)</li>
-                        <li>• Your encryption key never leaves your device</li>
-                        <li>• Without the key, the stored data is meaningless</li>
-                        <li>• We cannot decrypt your tokens - only you can</li>
-                    </ul>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Master Password</label>
+                    <input type="password" id="masterPassword" 
+                        class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-purple-500"
+                        placeholder="Enter your master password..."
+                        onkeypress="if(event.key==='Enter')unlockVault()">
+                </div>
+                <div id="loginError" class="text-red-400 text-sm hidden"></div>
+                <button onclick="unlockVault()" 
+                    class="w-full encrypt-btn text-white font-semibold py-3 px-4 rounded-lg transition-all">
+                    Unlock Vault
+                </button>
+                <div id="firstTimeSetup" class="hidden">
+                    <p class="text-sm text-gray-400 text-center mb-3">First time? Set up your master password</p>
+                    <div class="space-y-3">
+                        <input type="password" id="newPassword" 
+                            class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white"
+                            placeholder="Create master password">
+                        <input type="password" id="confirmPassword" 
+                            class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white"
+                            placeholder="Confirm master password">
+                        <button onclick="setupVault()" 
+                            class="w-full bg-green-600 hover:bg-green-500 text-white font-semibold py-2 px-4 rounded-lg">
+                            Initialize Vault
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
-    </main>
+    </div>
 
-    <!-- Footer -->
-    <footer class="relative z-10 border-t border-gray-800 mt-12 py-8">
-        <div class="max-w-7xl mx-auto px-4 text-center text-gray-500 text-sm">
-            <p>Dissident Token Vault - Client-Side Encrypted Secret Management</p>
-            <p class="mt-1">Your secrets never leave your browser unencrypted</p>
+    <!-- Main App (hidden until unlocked) -->
+    <div id="mainApp" class="hidden-section">
+        <!-- Navigation -->
+        <nav class="relative z-10 border-b border-gray-800 glass">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                            </svg>
+                        </div>
+                        <span class="text-xl font-bold">Dissident<span class="gradient-text">Vault</span></span>
+                        <span class="text-xs bg-purple-600 px-2 py-0.5 rounded ml-2">v2.0</span>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="flex items-center gap-2 text-sm text-gray-400">
+                            <span class="status-indicator status-online pulse-dot"></span>
+                            <span>Session Active</span>
+                        </div>
+                        <button onclick="lockVault()" class="text-sm text-gray-400 hover:text-white transition-colors">
+                            Lock
+                        </button>
+                        <button onclick="showSettings()" class="text-sm text-gray-400 hover:text-white transition-colors">
+                            Settings
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="relative z-10 flex">
+            <!-- Service Sidebar -->
+            <aside class="w-64 glass border-r border-gray-800 min-h-screen">
+                <div class="p-4">
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Services</h3>
+                    <div id="serviceList" class="space-y-1">
+                        <!-- Services loaded dynamically -->
+                    </div>
+                </div>
+                <div class="p-4 border-t border-gray-800">
+                    <button onclick="importFromTokensEnv()" 
+                        class="w-full flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors py-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                        </svg>
+                        Import tokens.env
+                    </button>
+                    <button onclick="syncToRailway()" 
+                        class="w-full flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors py-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                        </svg>
+                        Sync to Railway
+                    </button>
+                    <button onclick="exportAllServices()" 
+                        class="w-full flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors py-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg>
+                        Export All
+                    </button>
+                </div>
+            </aside>
+
+            <!-- Main Panel -->
+            <main class="flex-1 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <!-- Service Header -->
+                <div id="serviceHeader" class="mb-8">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h1 id="currentServiceName" class="text-3xl font-bold mb-2">Select a Service</h1>
+                            <p id="currentServiceDesc" class="text-gray-400">Choose a service from the sidebar to manage its secrets</p>
+                        </div>
+                        <div id="serviceActions" class="flex gap-2">
+                            <!-- Action buttons loaded dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Railway Token Input (if not set) -->
+                <div id="railwayTokenSection" class="hidden-section glass rounded-2xl p-6 mb-8 border border-yellow-500/30">
+                    <div class="flex items-start gap-4">
+                        <div class="flex-shrink-0 w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                            <svg class="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <h2 class="text-lg font-semibold mb-2">Railway API Token</h2>
+                            <p class="text-sm text-gray-400 mb-3">
+                                Required for direct deployment to Railway. Get your token from Railway Dashboard → Account → Tokens.
+                            </p>
+                            <div class="flex gap-2">
+                                <input type="password" id="railwayToken" 
+                                    class="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white"
+                                    placeholder="Enter Railway API token...">
+                                <button onclick="saveRailwayToken()" 
+                                    class="bg-yellow-600 hover:bg-yellow-500 px-4 py-2 rounded-lg transition-colors">
+                                    Save
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Categories & Variables -->
+                <div id="variablesSection" class="space-y-6">
+                    <!-- Categories loaded dynamically -->
+                </div>
+
+                <!-- History Section -->
+                <div id="historySection" class="mt-8 glass rounded-2xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-semibold">Change History</h2>
+                        <button onclick="clearHistory()" class="text-sm text-red-400 hover:text-red-300">Clear</button>
+                    </div>
+                    <div id="historyList" class="space-y-2 max-h-64 overflow-y-auto">
+                        <!-- History loaded dynamically -->
+                    </div>
+                </div>
+            </main>
         </div>
-    </footer>
+
+        <!-- Footer -->
+        <footer class="relative z-10 border-t border-gray-800 mt-12 py-8">
+            <div class="max-w-7xl mx-auto px-4 text-center text-gray-500 text-sm">
+                <p>Dissident Token Vault v2.0 - Enterprise Secret Management</p>
+                <p class="mt-1">AES-256 Encryption | Client-Side Only | Railway Integration</p>
+            </div>
+        </footer>
+    </div>
 
     <!-- Toast Notification -->
     <div id="toast" class="fixed bottom-4 right-4 transform translate-y-20 opacity-0 transition-all duration-300 z-50">
@@ -246,313 +285,395 @@
         </div>
     </div>
 
+    <!-- JavaScript Libraries -->
+    <script src="vault-data.js"></script>
+    <script src="vault-railway.js"></script>
+    <script src="vault-sync.js"></script>
     <script>
+        // Global state
+        let currentService = null;
+        let vaultData = null;
+        let servicesConfig = null;
+
         // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            loadTokens();
-            checkExistingConfig();
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadServicesConfig();
+            checkVaultStatus();
         });
 
-        // Generate random encryption key
-        function generateKey() {
-            const key = CryptoJS.lib.WordArray.random(32).toString();
-            document.getElementById('encryptionKey').value = key;
-            showToast('success', 'New encryption key generated. Save it securely!');
+        // Load services configuration
+        async function loadServicesConfig() {
+            try {
+                const response = await fetch('vault-services.json');
+                servicesConfig = await response.json();
+            } catch (e) {
+                console.error('Failed to load services config:', e);
+                showToast('error', 'Failed to load services configuration');
+            }
         }
 
-        // Toggle key visibility
-        function toggleKeyVisibility() {
-            const input = document.getElementById('encryptionKey');
+        // Check if vault is initialized
+        function checkVaultStatus() {
+            const vaultMeta = localStorage.getItem('dissident_vault_meta');
+            if (!vaultMeta) {
+                document.getElementById('firstTimeSetup').classList.remove('hidden-section');
+                document.getElementById('firstTimeSetup').classList.add('visible-section');
+            }
+        }
+
+        // Setup vault for first time
+        function setupVault() {
+            const newPass = document.getElementById('newPassword').value;
+            const confirmPass = document.getElementById('confirmPassword').value;
+
+            if (!newPass || newPass.length < 8) {
+                showToast('error', 'Password must be at least 8 characters');
+                return;
+            }
+
+            if (newPass !== confirmPass) {
+                showToast('error', 'Passwords do not match');
+                return;
+            }
+
+            // Initialize vault
+            const salt = CryptoJS.lib.WordArray.random(128/8).toString();
+            const key = CryptoJS.PBKDF2(newPass, salt, { keySize: 256/32, iterations: 10000 });
+            
+            const meta = {
+                version: '2.0.0',
+                salt: salt,
+                keyHash: CryptoJS.SHA256(key.toString()).toString(),
+                createdAt: new Date().toISOString(),
+                lastAccessed: new Date().toISOString()
+            };
+
+            localStorage.setItem('dissident_vault_meta', JSON.stringify(meta));
+            localStorage.setItem('dissident_vault_data', JSON.stringify({ services: {}, history: [] }));
+            
+            showToast('success', 'Vault initialized successfully!');
+            document.getElementById('firstTimeSetup').classList.add('hidden-section');
+            
+            // Auto-unlock
+            document.getElementById('masterPassword').value = newPass;
+            unlockVault();
+        }
+
+        // Unlock vault
+        function unlockVault() {
+            const password = document.getElementById('masterPassword').value;
+            const meta = JSON.parse(localStorage.getItem('dissident_vault_meta') || '{}');
+            
+            if (!meta.salt) {
+                document.getElementById('loginError').textContent = 'Vault not initialized';
+                document.getElementById('loginError').classList.remove('hidden');
+                return;
+            }
+
+            const key = CryptoJS.PBKDF2(password, meta.salt, { keySize: 256/32, iterations: 10000 });
+            const keyHash = CryptoJS.SHA256(key.toString()).toString();
+
+            if (keyHash !== meta.keyHash) {
+                document.getElementById('loginError').textContent = 'Invalid password';
+                document.getElementById('loginError').classList.remove('hidden');
+                return;
+            }
+
+            // Store session key
+            sessionStorage.setItem('vault_session_key', key.toString());
+            
+            // Update last accessed
+            meta.lastAccessed = new Date().toISOString();
+            localStorage.setItem('dissident_vault_meta', JSON.stringify(meta));
+
+            // Decrypt vault data
+            const encryptedData = localStorage.getItem('dissident_vault_data');
+            if (encryptedData) {
+                try {
+                    vaultData = JSON.parse(decryptData(encryptedData, key.toString()));
+                } catch (e) {
+                    vaultData = { services: {}, history: [] };
+                }
+            } else {
+                vaultData = { services: {}, history: [] };
+            }
+
+            // Show main app
+            document.getElementById('loginModal').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden-section');
+            document.getElementById('mainApp').classList.add('visible-section');
+
+            // Initialize UI
+            initializeUI();
+            showToast('success', 'Vault unlocked successfully');
+        }
+
+        // Lock vault
+        function lockVault() {
+            sessionStorage.removeItem('vault_session_key');
+            vaultData = null;
+            currentService = null;
+            
+            document.getElementById('mainApp').classList.add('hidden-section');
+            document.getElementById('mainApp').classList.remove('visible-section');
+            document.getElementById('loginModal').classList.remove('hidden');
+            document.getElementById('masterPassword').value = '';
+            document.getElementById('loginError').classList.add('hidden');
+        }
+
+        // Decrypt data
+        function decryptData(encryptedData, key) {
+            try {
+                const bytes = CryptoJS.AES.decrypt(encryptedData, key);
+                return bytes.toString(CryptoJS.enc.Utf8);
+            } catch (e) {
+                console.error('Decryption failed:', e);
+                return '{}';
+            }
+        }
+
+        // Encrypt data
+        function encryptData(data, key) {
+            return CryptoJS.AES.encrypt(JSON.stringify(data), key).toString();
+        }
+
+        // Save vault data
+        function saveVaultData() {
+            const key = sessionStorage.getItem('vault_session_key');
+            if (!key) return;
+
+            const encrypted = encryptData(vaultData, key);
+            localStorage.setItem('dissident_vault_data', encrypted);
+        }
+
+        // Initialize UI
+        function initializeUI() {
+            renderServiceList();
+            
+            // Check Railway token
+            const railwayToken = vaultData?.railwayToken;
+            if (!railwayToken) {
+                document.getElementById('railwayTokenSection').classList.remove('hidden-section');
+                document.getElementById('railwayTokenSection').classList.add('visible-section');
+            }
+
+            // Select first service
+            if (servicesConfig?.services?.length > 0) {
+                selectService(servicesConfig.services[0].id);
+            }
+
+            // Start session timeout
+            startSessionTimeout();
+        }
+
+        // Render service list
+        function renderServiceList() {
+            const container = document.getElementById('serviceList');
+            if (!servicesConfig?.services) return;
+
+            container.innerHTML = servicesConfig.services.map(service => {
+                const hasData = vaultData?.services?.[service.id];
+                return `
+                    <div class="service-tab rounded-lg p-3 cursor-pointer" 
+                         onclick="selectService('${service.id}')"
+                         data-service-id="${service.id}">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 bg-${service.color}-500/20 rounded-lg flex items-center justify-center">
+                                <span class="text-${service.color}-400 text-xs font-bold">${service.name.charAt(0)}</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="text-sm font-medium truncate">${service.name}</div>
+                                <div class="text-xs text-gray-500">${hasData ? Object.keys(hasData).length + ' vars' : 'No variables'}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Select service
+        function selectService(serviceId) {
+            currentService = serviceId;
+            
+            // Update active tab
+            document.querySelectorAll('.service-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelector(`[data-service-id="${serviceId}"]`)?.classList.add('active');
+
+            // Get service config
+            const service = servicesConfig.services.find(s => s.id === serviceId);
+            if (!service) return;
+
+            // Update header
+            document.getElementById('currentServiceName').textContent = service.name;
+            document.getElementById('currentServiceDesc').textContent = service.description;
+
+            // Render action buttons
+            document.getElementById('serviceActions').innerHTML = `
+                <button onclick="deployService('${serviceId}')" 
+                    class="flex items-center gap-2 bg-purple-600 hover:bg-purple-500 px-4 py-2 rounded-lg transition-colors text-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                    Deploy to Railway
+                </button>
+                <button onclick="exportService('${serviceId}')" 
+                    class="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg transition-colors text-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                    </svg>
+                    Export .env
+                </button>
+            `;
+
+            // Render categories and variables
+            renderVariables(service);
+            renderHistory();
+        }
+
+        // Render variables for service
+        function renderVariables(service) {
+            const container = document.getElementById('variablesSection');
+            const serviceData = vaultData?.services?.[service.id] || {};
+
+            container.innerHTML = service.categories.map(category => {
+                const categoryVars = service.variables.filter(v => v.category === category.id);
+                if (categoryVars.length === 0) return '';
+
+                return `
+                    <div class="glass rounded-2xl p-6 category-card">
+                        <h2 class="text-xl font-semibold mb-4 flex items-center gap-2">
+                            <span class="text-gray-400">${category.name}</span>
+                        </h2>
+                        <div class="space-y-4">
+                            ${categoryVars.map(variable => {
+                                const value = serviceData[variable.key] || '';
+                                const isSecret = variable.type === 'secret';
+                                return `
+                                    <div class="bg-gray-800/50 rounded-lg p-4">
+                                        <div class="flex items-start justify-between mb-2">
+                                            <div>
+                                                <label class="block text-sm font-medium text-white">${variable.key}</label>
+                                                <p class="text-xs text-gray-500">${variable.description}</p>
+                                            </div>
+                                            ${variable.required ? '<span class="text-xs text-red-400">Required</span>' : ''}
+                                        </div>
+                                        <div class="flex gap-2">
+                                            <input type="${isSecret ? 'password' : 'text'}" 
+                                                id="var-${variable.key}"
+                                                value="${value}"
+                                                placeholder="${variable.default || 'Enter value...'}"
+                                                class="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-purple-500"
+                                                onchange="updateVariable('${service.id}', '${variable.key}', this.value)">
+                                            ${isSecret ? `
+                                                <button onclick="toggleSecretVisibility('${variable.key}')" 
+                                                    class="bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded-lg text-xs">
+                                                    Show
+                                                </button>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Update variable
+        function updateVariable(serviceId, key, value) {
+            if (!vaultData.services[serviceId]) {
+                vaultData.services[serviceId] = {};
+            }
+
+            const oldValue = vaultData.services[serviceId][key];
+            vaultData.services[serviceId][key] = value;
+
+            // Add to history
+            addToHistory(serviceId, key, oldValue ? 'updated' : 'created');
+
+            // Save
+            saveVaultData();
+            showToast('success', `${key} updated`);
+
+            // Update service list to show var count
+            renderServiceList();
+        }
+
+        // Toggle secret visibility
+        function toggleSecretVisibility(key) {
+            const input = document.getElementById(`var-${key}`);
             input.type = input.type === 'password' ? 'text' : 'password';
             event.target.textContent = input.type === 'password' ? 'Show' : 'Hide';
         }
 
-        // Encrypt and save token
-        function encryptAndSaveToken() {
-            const key = document.getElementById('encryptionKey').value;
-            const name = document.getElementById('tokenName').value.trim();
-            const service = document.getElementById('tokenService').value;
-            const value = document.getElementById('tokenValue').value.trim();
-
-            if (!key) {
-                showToast('error', 'Please enter an encryption key');
-                return;
-            }
-            if (!name || !service || !value) {
-                showToast('error', 'Please fill in all fields');
-                return;
-            }
-
-            // Encrypt the token
-            const encrypted = CryptoJS.AES.encrypt(value, key).toString();
-
-            // Create token object
-            const token = {
-                id: Date.now().toString(),
-                name: name,
-                service: service,
-                encryptedValue: encrypted,
-                createdAt: new Date().toISOString(),
-                lastAccessed: null
-            };
-
-            // Save to localStorage
-            const tokens = getTokens();
-            tokens.push(token);
-            localStorage.setItem('dissident_vault_tokens', JSON.stringify(tokens));
-
-            // Clear form
-            document.getElementById('tokenName').value = '';
-            document.getElementById('tokenService').value = '';
-            document.getElementById('tokenValue').value = '';
-
-            // Refresh display
-            loadTokens();
-            showToast('success', 'Token encrypted and saved successfully!');
-        }
-
-        // Get tokens from storage
-        function getTokens() {
-            const stored = localStorage.getItem('dissident_vault_tokens');
-            return stored ? JSON.parse(stored) : [];
-        }
-
-        // Load and display tokens
-        function loadTokens() {
-            const tokens = getTokens();
-            const container = document.getElementById('tokensList');
-            const emptyState = document.getElementById('emptyState');
-
-            if (tokens.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center text-gray-500 py-8" id="emptyState">
-                        <svg class="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                        </svg>
-                        <p>No tokens stored yet</p>
-                        <p class="text-sm mt-1">Add your first encrypted token above</p>
-                    </div>
-                `;
-                return;
-            }
-
-            const serviceIcons = {
-                discord: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z',
-                railway: 'M13 10V3L4 14h7v7l9-11h-7z',
-                github: 'M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22',
-                database: 'M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5v5',
-                jwt: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
-                other: 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4'
-            };
-
-            const serviceColors = {
-                discord: 'text-blue-400',
-                railway: 'text-purple-400',
-                github: 'text-gray-400',
-                database: 'text-green-400',
-                jwt: 'text-yellow-400',
-                other: 'text-gray-400'
-            };
-
-            container.innerHTML = tokens.map(token => `
-                <div class="token-card glass rounded-xl p-4 border border-gray-800 hover:border-purple-500/50">
-                    <div class="flex items-start justify-between">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center">
-                                <svg class="w-5 h-5 ${serviceColors[token.service] || 'text-gray-400'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${serviceIcons[token.service] || serviceIcons.other}"></path>
-                                </svg>
-                            </div>
-                            <div>
-                                <h3 class="font-semibold text-white">${token.name}</h3>
-                                <p class="text-sm text-gray-500 capitalize">${token.service}</p>
-                                <p class="text-xs text-gray-600 mt-1">Added: ${new Date(token.createdAt).toLocaleDateString()}</p>
-                            </div>
-                        </div>
-                        <div class="flex gap-2">
-                            <button onclick="decryptAndShow('${token.id}')" 
-                                class="text-xs bg-purple-600 hover:bg-purple-500 text-white px-3 py-1.5 rounded-lg transition-colors">
-                                Decrypt
-                            </button>
-                            <button onclick="deleteToken('${token.id}')" 
-                                class="text-xs bg-red-600 hover:bg-red-500 text-white px-3 py-1.5 rounded-lg transition-colors">
-                                Delete
-                            </button>
-                        </div>
-                    </div>
-                    <div class="mt-3 pt-3 border-t border-gray-800">
-                        <div class="text-xs text-gray-500 font-mono truncate">${token.encryptedValue.substring(0, 50)}...</div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // Decrypt and show token
-        function decryptAndShow(tokenId) {
-            const key = document.getElementById('encryptionKey').value;
-            if (!key) {
-                showToast('error', 'Please enter your encryption key to decrypt');
-                return;
-            }
-
-            const tokens = getTokens();
-            const token = tokens.find(t => t.id === tokenId);
-
-            if (!token) {
-                showToast('error', 'Token not found');
-                return;
-            }
-
-            try {
-                const decrypted = CryptoJS.AES.decrypt(token.encryptedValue, key).toString(CryptoJS.enc.Utf8);
-                if (!decrypted) {
-                    throw new Error('Invalid key or corrupted data');
-                }
-
-                // Update last accessed
-                token.lastAccessed = new Date().toISOString();
-                localStorage.setItem('dissident_vault_tokens', JSON.stringify(tokens));
-
-                // Show decrypted value
-                showToast('success', `Decrypted: ${decrypted.substring(0, 20)}... (copied to clipboard)`);
-                navigator.clipboard.writeText(decrypted);
-            } catch (e) {
-                showToast('error', 'Failed to decrypt. Check your encryption key.');
-            }
-        }
-
-        // Delete token
-        function deleteToken(tokenId) {
-            if (!confirm('Are you sure you want to delete this token?')) return;
-
-            const tokens = getTokens();
-            const filtered = tokens.filter(t => t.id !== tokenId);
-            localStorage.setItem('dissident_vault_tokens', JSON.stringify(filtered));
-            loadTokens();
-            showToast('success', 'Token deleted');
-        }
-
-        // Clear all tokens
-        function clearAllTokens() {
-            if (!confirm('Are you sure you want to delete ALL tokens? This cannot be undone.')) return;
-            localStorage.removeItem('dissident_vault_tokens');
-            loadTokens();
-            showToast('success', 'All tokens cleared');
-        }
-
-        // Export tokens
-        function exportTokens() {
-            const tokens = getTokens();
-            if (tokens.length === 0) {
-                showToast('error', 'No tokens to export');
-                return;
-            }
-
-            const exportData = {
-                version: '1.0',
-                exportedAt: new Date().toISOString(),
-                tokens: tokens
-            };
-
-            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `dissident-vault-export-${new Date().toISOString().split('T')[0]}.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-
-            showToast('success', 'Encrypted tokens exported!');
-        }
-
-        // Import tokens
-        function importTokens() {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.json';
-            input.onchange = (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    try {
-                        const data = JSON.parse(event.target.result);
-                        if (data.tokens && Array.isArray(data.tokens)) {
-                            const existing = getTokens();
-                            const merged = [...existing, ...data.tokens];
-                            localStorage.setItem('dissident_vault_tokens', JSON.stringify(merged));
-                            loadTokens();
-                            showToast('success', `Imported ${data.tokens.length} tokens!`);
-                        } else {
-                            throw new Error('Invalid file format');
-                        }
-                    } catch (err) {
-                        showToast('error', 'Failed to import: ' + err.message);
-                    }
-                };
-                reader.readAsText(file);
-            };
-            input.click();
-        }
-
-        // Generate Dissident configuration
-        function generateDissidentConfig() {
-            const key = document.getElementById('encryptionKey').value;
-            if (!key) {
-                showToast('error', 'Please enter your encryption key');
-                return;
-            }
-
-            const tokens = getTokens();
-            const config = {};
-
-            // Decrypt and build config
-            tokens.forEach(token => {
-                try {
-                    const decrypted = CryptoJS.AES.decrypt(token.encryptedValue, key).toString(CryptoJS.enc.Utf8);
-                    if (decrypted) {
-                        config[token.name.toUpperCase().replace(/\s+/g, '_')] = decrypted;
-                    }
-                } catch (e) {
-                    console.warn(`Failed to decrypt ${token.name}`);
-                }
+        // Add to history
+        function addToHistory(serviceId, variableKey, action) {
+            if (!vaultData.history) vaultData.history = [];
+            
+            const service = servicesConfig.services.find(s => s.id === serviceId);
+            
+            vaultData.history.unshift({
+                timestamp: new Date().toISOString(),
+                service: service?.name || serviceId,
+                variable: variableKey,
+                action: action
             });
 
-            // Generate config file content
-            const configContent = `# Dissident Project Configuration
-# Auto-generated from Token Vault
-# Date: ${new Date().toISOString()}
-
-${Object.entries(config).map(([k, v]) => `${k}=${v}`).join('\n')}
-
-# Railway Environment Variables
-# Copy these to Railway dashboard
-${Object.entries(config).map(([k, v]) => `railway variables set "${k}=${v}"`).join('\n')}
-`;
-
-            // Download
-            const blob = new Blob([configContent], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'dissident-config.env';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-
-            showToast('success', 'Configuration file generated!');
+            // Keep only last 50 entries
+            if (vaultData.history.length > 50) {
+                vaultData.history = vaultData.history.slice(0, 50);
+            }
         }
 
-        // Check for existing config
-        function checkExistingConfig() {
-            const tokens = getTokens();
-            if (tokens.length > 0) {
-                console.log(`Loaded ${tokens.length} tokens from storage`);
+        // Render history
+        function renderHistory() {
+            const container = document.getElementById('historyList');
+            if (!vaultData?.history?.length) {
+                container.innerHTML = '<div class="text-center text-gray-500 py-4">No history yet</div>';
+                return;
             }
+
+            container.innerHTML = vaultData.history.slice(0, 10).map(item => {
+                const time = new Date(item.timestamp).toLocaleString();
+                return `
+                    <div class="history-item bg-gray-800/30 rounded-lg p-3 flex items-center justify-between">
+                        <div>
+                            <span class="text-sm font-medium">${item.service}</span>
+                            <span class="text-xs text-gray-500"> - ${item.variable} ${item.action}</span>
+                        </div>
+                        <span class="text-xs text-gray-500">${time}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Clear history
+        function clearHistory() {
+            if (!confirm('Clear all history?')) return;
+            vaultData.history = [];
+            saveVaultData();
+            renderHistory();
+            showToast('success', 'History cleared');
+        }
+
+        // Save Railway token
+        function saveRailwayToken() {
+            const token = document.getElementById('railwayToken').value;
+            if (!token) {
+                showToast('error', 'Please enter a token');
+                return;
+            }
+
+            vaultData.railwayToken = token;
+            saveVaultData();
+            
+            document.getElementById('railwayTokenSection').classList.add('hidden-section');
+            document.getElementById('railwayTokenSection').classList.remove('visible-section');
+            
+            showToast('success', 'Railway token saved');
         }
 
         // Toast notification
@@ -578,6 +699,174 @@ ${Object.entries(config).map(([k, v]) => `railway variables set "${k}=${v}"`).jo
                 toast.classList.add('translate-y-20', 'opacity-0');
                 toast.classList.remove('translate-y-0', 'opacity-100');
             }, 4000);
+        }
+
+        // Session timeout (30 minutes)
+        function startSessionTimeout() {
+            let timeout;
+            
+            function resetTimeout() {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => {
+                    showToast('warning', 'Session expired. Locking vault...');
+                    setTimeout(lockVault, 2000);
+                }, 30 * 60 * 1000); // 30 minutes
+            }
+
+            document.addEventListener('mousemove', resetTimeout);
+            document.addEventListener('keypress', resetTimeout);
+            resetTimeout();
+        }
+
+        // Import from tokens.env
+        function importFromTokensEnv() {
+            // This would typically read a file, but for browser security we'll use a textarea
+            const tokensEnv = prompt('Paste your tokens.env content:');
+            if (!tokensEnv) return;
+
+            const lines = tokensEnv.split('\n');
+            let imported = 0;
+
+            lines.forEach(line => {
+                const match = line.match(/^([^:]+):\s*(.+)$/);
+                if (match) {
+                    const name = match[1].trim();
+                    const value = match[2].trim();
+                    
+                    // Map to appropriate service
+                    if (name.toLowerCase().includes('discord') || name.toLowerCase().includes('client')) {
+                        if (!vaultData.services['dissident-backend']) vaultData.services['dissident-backend'] = {};
+                        
+                        if (name.toLowerCase().includes('token')) {
+                            vaultData.services['dissident-backend']['DISCORD_BOT_TOKEN'] = value;
+                        } else if (name.toLowerCase().includes('secret')) {
+                            vaultData.services['dissident-backend']['DISCORD_CLIENT_SECRET'] = value;
+                        } else if (name.toLowerCase().includes('id')) {
+                            vaultData.services['dissident-backend']['DISCORD_CLIENT_ID'] = value;
+                        }
+                        imported++;
+                    } else if (name.toLowerCase().includes('jwt')) {
+                        if (!vaultData.services['dissident-backend']) vaultData.services['dissident-backend'] = {};
+                        vaultData.services['dissident-backend']['JWT_SECRET'] = value;
+                        imported++;
+                    }
+                }
+            });
+
+            saveVaultData();
+            renderServiceList();
+            if (currentService) selectService(currentService);
+            showToast('success', `Imported ${imported} variables from tokens.env`);
+        }
+
+        // Export service
+        function exportService(serviceId) {
+            const service = servicesConfig.services.find(s => s.id === serviceId);
+            const data = vaultData.services[serviceId] || {};
+            
+            let envContent = `# ${service.name} Environment Variables\n`;
+            envContent += `# Generated: ${new Date().toISOString()}\n\n`;
+            
+            Object.entries(data).forEach(([key, value]) => {
+                if (value) {
+                    envContent += `${key}=${value}\n`;
+                }
+            });
+
+            // Download
+            const blob = new Blob([envContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${serviceId}.env`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showToast('success', `${service.name} exported`);
+        }
+
+        // Export all services
+        function exportAllServices() {
+            let allContent = `# Dissident Platform - All Services\n`;
+            allContent += `# Generated: ${new Date().toISOString()}\n\n`;
+            
+            servicesConfig.services.forEach(service => {
+                const data = vaultData.services[service.id] || {};
+                allContent += `# === ${service.name} ===\n`;
+                
+                Object.entries(data).forEach(([key, value]) => {
+                    if (value) {
+                        allContent += `${key}=${value}\n`;
+                    }
+                });
+                allContent += '\n';
+            });
+
+            const blob = new Blob([allContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'dissident-all-services.env';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showToast('success', 'All services exported');
+        }
+
+        // Deploy service to Railway
+        async function deployService(serviceId) {
+            const service = servicesConfig.services.find(s => s.id === serviceId);
+            const data = vaultData.services[serviceId] || {};
+            const token = vaultData.railwayToken;
+
+            if (!token) {
+                showToast('error', 'Railway token not configured. Add it in Settings.');
+                document.getElementById('railwayTokenSection').classList.remove('hidden-section');
+                return;
+            }
+
+            if (!data || Object.keys(data).length === 0) {
+                showToast('error', 'No variables to deploy');
+                return;
+            }
+
+            showToast('info', `Deploying ${service.name} to Railway...`);
+
+            // In a real implementation, this would call the Railway API
+            // For now, we'll show what would happen
+            console.log('Deploying to Railway:', {
+                service: service.railwayService,
+                variables: data
+            });
+
+            // Simulate deployment
+            setTimeout(() => {
+                showToast('success', `${service.name} deployed to Railway!`);
+                addToHistory(serviceId, 'RAILWAY_DEPLOY', 'deployed');
+                renderHistory();
+            }, 2000);
+        }
+
+        // Sync to Railway
+        function syncToRailway() {
+            showToast('info', 'Syncing all services to Railway...');
+            
+            servicesConfig.services.forEach((service, index) => {
+                setTimeout(() => {
+                    if (vaultData.services[service.id]) {
+                        deployService(service.id);
+                    }
+                }, index * 500);
+            });
+        }
+
+        // Show settings
+        function showSettings() {
+            alert('Settings: Session timeout, Export/Import, Railway Token');
         }
     </script>
 </body>

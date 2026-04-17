@@ -199,23 +199,58 @@ const VaultUI = {
             // No categories, render all variables
             html += '<div class="variables-grid">';
             service.variables.forEach(variable => {
+                // Use VaultIntelligence for smart detection
+                const detectedType = VaultIntelligence?.detectType(variable.key, serviceData[variable.key]) || variable.type;
+                const suggestions = VaultIntelligence?.getSuggestions(variable.key) || {};
+                const validation = VaultIntelligence?.validate(variable.key, serviceData[variable.key] || '') || { valid: true };
+                
                 const value = serviceData[variable.key] || '';
-                const isSecret = variable.type === 'secret' || variable.sensitive;
+                const isSecret = variable.type === 'secret' || variable.sensitive || suggestions.isSecret;
+                const hasGenerator = suggestions.generator;
 
                 html += `
-                    <div class="variable-card">
+                    <div class="variable-card ${!validation.valid ? 'invalid' : validation.warning ? 'warning' : ''}">
                         <div class="variable-header">
-                            <label>${variable.key}</label>
-                            ${variable.required ? '<span class="badge required">Required</span>' : ''}
+                            <label>${suggestions.icon || '📝'} ${variable.key}</label>
+                            <div class="variable-badges">
+                                ${variable.required ? '<span class="badge required">Required</span>' : ''}
+                                ${suggestions.type ? `<span class="badge type" title="${suggestions.description}">${suggestions.type}</span>` : ''}
+                            </div>
                         </div>
-                        <p class="variable-desc">${variable.description || ''}</p>
-                        <div class="variable-input">
-                            <input type="${isSecret ? 'password' : 'text'}" 
-                                   value="${this.escapeHtml(value)}"
-                                   placeholder="${variable.default || ''}"
-                                   onchange="VaultUI.updateVariable('${serviceId}', '${variable.key}', this.value)"
-                            >
+                        <div class="variable-smart-input">
+                            <div class="input-wrapper">
+                                <input type="${isSecret ? 'password' : 'text'}" 
+                                       id="var-${variable.key}"
+                                       value="${this.escapeHtml(value)}"
+                                       placeholder="${variable.default || suggestions.defaultValue || ''}"
+                                       data-key="${variable.key}"
+                                       data-service="${serviceId}"
+                                       oninput="VaultUI.handleVariableInput(this)"
+                                       onchange="VaultUI.updateVariable('${serviceId}', '${variable.key}', this.value)"
+                                >
+                                ${hasGenerator ? `
+                                    <button class="btn-generate" onclick="VaultUI.generateValue('${serviceId}', '${variable.key}')" title="Generate secure value">
+                                        🎲 Generate
+                                    </button>
+                                ` : ''}
+                            </div>
+                            
+                            ${suggestions.suggestions?.length ? `
+                                <div class="input-suggestions">
+                                    ${suggestions.suggestions.map(s => `
+                                        <button class="suggestion-chip" onclick="VaultUI.setVariableValue('${serviceId}', '${variable.key}', '${s}')">${s}</button>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
                         </div>
+                        
+                        ${!validation.valid || validation.warning ? `
+                            <div class="validation-message ${!validation.valid ? 'error' : 'warning'}">
+                                ${!validation.valid ? '❌' : '⚠️'} ${validation.error || validation.warning}
+                            </div>
+                        ` : ''}
+                        
+                        <p class="variable-desc">${variable.description || suggestions.description || ''}</p>
                     </div>
                 `;
             });
@@ -950,6 +985,236 @@ const VaultUI = {
     closeSharedVariables() {
         const modal = document.getElementById('sharedVariablesModal');
         if (modal) modal.classList.add('hidden');
+    },
+
+    // Intelligent Variable Management
+    
+    // Handle variable input with real-time intelligence
+    handleVariableInput(input) {
+        const key = input.dataset.key;
+        const serviceId = input.dataset.service;
+        const value = input.value;
+        
+        if (!VaultIntelligence) return;
+        
+        const validation = VaultIntelligence.validateAsYouType(key, value);
+        const card = input.closest('.variable-card');
+        
+        // Update validation styling
+        card.classList.remove('invalid', 'warning');
+        if (!validation.valid) {
+            card.classList.add('invalid');
+        } else if (validation.warning) {
+            card.classList.add('warning');
+        }
+        
+        // Update or create validation message
+        let msgDiv = card.querySelector('.validation-message');
+        if (!validation.valid || validation.warning) {
+            if (!msgDiv) {
+                msgDiv = document.createElement('div');
+                msgDiv.className = 'validation-message';
+                card.appendChild(msgDiv);
+            }
+            msgDiv.className = `validation-message ${!validation.valid ? 'error' : 'warning'}`;
+            msgDiv.innerHTML = `${!validation.valid ? '❌' : '⚠️'} ${validation.error || validation.warning}`;
+        } else if (msgDiv) {
+            msgDiv.remove();
+        }
+    },
+    
+    // Generate secure value for variable
+    generateValue(serviceId, key) {
+        if (!VaultIntelligence) return;
+        
+        const suggestions = VaultIntelligence.getSuggestions(key);
+        if (suggestions.generator) {
+            const value = suggestions.generator();
+            const input = document.getElementById(`var-${key}`);
+            if (input) {
+                input.value = value;
+                input.type = suggestions.isSecret ? 'text' : input.type; // Show generated value temporarily
+                this.updateVariable(serviceId, key, value);
+                this.showToast(`Generated secure ${suggestions.type} for ${key}`, 'success');
+                
+                // Flash the input
+                input.style.background = 'rgba(16, 185, 129, 0.2)';
+                setTimeout(() => {
+                    input.style.background = '';
+                    if (suggestions.isSecret) input.type = 'password';
+                }, 1000);
+            }
+        }
+    },
+    
+    // Set variable value from suggestion
+    setVariableValue(serviceId, key, value) {
+        const input = document.getElementById(`var-${key}`);
+        if (input) {
+            input.value = value;
+            this.updateVariable(serviceId, key, value);
+        }
+    },
+    
+    // Show template application modal
+    showTemplateModal() {
+        if (!VaultIntelligence) return;
+        
+        const templates = VaultIntelligence.templates;
+        
+        let modal = document.getElementById('templateModal');
+        if (!modal) {
+            const modalHtml = `
+                <div id="templateModal" class="modal hidden">
+                    <div class="modal-overlay" onclick="VaultUI.closeTemplateModal()"></div>
+                    <div class="modal-content template-modal">
+                        <div class="modal-header">
+                            <h2>📋 Apply Variable Template</h2>
+                            <button class="btn-close" onclick="VaultUI.closeTemplateModal()">✕</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="template-list" id="templateList"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            modal = document.getElementById('templateModal');
+        }
+        
+        // Render templates
+        const list = document.getElementById('templateList');
+        list.innerHTML = Object.entries(templates).map(([id, template]) => `
+            <div class="template-item" onclick="VaultUI.applyTemplate('${id}')">
+                <div class="template-icon">${template.icon}</div>
+                <div class="template-info">
+                    <h3>${template.name}</h3>
+                    <p>${template.description}</p>
+                    <span class="template-count">${template.variables.length} variables</span>
+                </div>
+                <button class="btn-apply">Apply</button>
+            </div>
+        `).join('');
+        
+        modal.classList.remove('hidden');
+    },
+    
+    // Close template modal
+    closeTemplateModal() {
+        const modal = document.getElementById('templateModal');
+        if (modal) modal.classList.add('hidden');
+    },
+    
+    // Apply template to current service
+    applyTemplate(templateId) {
+        if (!VaultIntelligence || !this.currentService) return;
+        
+        const result = VaultIntelligence.applyTemplate(templateId, this.currentService);
+        if (result) {
+            const { added, skipped } = result;
+            const msg = `Template applied: ${added.length} added, ${skipped.length} skipped`;
+            this.showToast(msg, 'success');
+            this.closeTemplateModal();
+            this.selectService(this.currentService);
+        }
+    },
+    
+    // Analyze current service for issues
+    analyzeService() {
+        if (!VaultIntelligence || !this.currentService) return;
+        
+        const analysis = VaultIntelligence.analyzeService(this.currentService);
+        if (!analysis) return;
+        
+        const { issues, warnings, info } = analysis;
+        const total = issues.filter(i => i.type === 'error').length + warnings.length + info.length;
+        
+        if (total === 0) {
+            this.showToast('No issues found! Service configuration looks good.', 'success');
+            return;
+        }
+        
+        // Show analysis modal
+        let modal = document.getElementById('analysisModal');
+        if (!modal) {
+            const modalHtml = `
+                <div id="analysisModal" class="modal hidden">
+                    <div class="modal-overlay" onclick="VaultUI.closeAnalysisModal()"></div>
+                    <div class="modal-content analysis-modal">
+                        <div class="modal-header">
+                            <h2>🔍 Service Analysis</h2>
+                            <button class="btn-close" onclick="VaultUI.closeAnalysisModal()">✕</button>
+                        </div>
+                        <div class="modal-body" id="analysisBody"></div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            modal = document.getElementById('analysisModal');
+        }
+        
+        const body = document.getElementById('analysisBody');
+        let html = '';
+        
+        if (issues.filter(i => i.type === 'error').length > 0) {
+            html += `<div class="analysis-section errors">
+                <h3>❌ Errors (${issues.filter(i => i.type === 'error').length})</h3>
+                ${issues.filter(i => i.type === 'error').map(i => `
+                    <div class="analysis-item error">
+                        <code>${i.key}</code>: ${i.message}
+                    </div>
+                `).join('')}
+            </div>`;
+        }
+        
+        if (warnings.length > 0) {
+            html += `<div class="analysis-section warnings">
+                <h3>⚠️ Warnings (${warnings.length})</h3>
+                ${warnings.map(w => `
+                    <div class="analysis-item warning">
+                        <code>${w.key}</code>: ${w.message}
+                    </div>
+                `).join('')}
+            </div>`;
+        }
+        
+        if (info.length > 0) {
+            html += `<div class="analysis-section info">
+                <h3>ℹ️ Suggestions (${info.length})</h3>
+                ${info.map(i => `
+                    <div class="analysis-item info">
+                        <span>${i.message}</span>
+                    </div>
+                `).join('')}
+            </div>`;
+        }
+        
+        body.innerHTML = html;
+        modal.classList.remove('hidden');
+    },
+    
+    // Close analysis modal
+    closeAnalysisModal() {
+        const modal = document.getElementById('analysisModal');
+        if (modal) modal.classList.add('hidden');
+    },
+    
+    // Show suggestions for shared variables
+    showSharedSuggestions() {
+        if (!VaultIntelligence) return;
+        
+        const suggestions = VaultIntelligence.suggestSharedVariables();
+        if (suggestions.length === 0) {
+            this.showToast('No shared variable suggestions found', 'info');
+            return;
+        }
+        
+        // Show suggestions in toast
+        suggestions.slice(0, 3).forEach(s => {
+            setTimeout(() => {
+                this.showToast(s.suggestion, 'warning', 8000);
+            }, 500);
+        });
     }
 };
 

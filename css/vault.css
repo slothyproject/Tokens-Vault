@@ -1367,6 +1367,87 @@ input::placeholder {
     font-size: 20px;
 }
 
+/* Bulk Edit Styles */
+.bulk-edit-controls {
+    margin-bottom: 20px;
+}
+
+.bulk-edit-bar {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.bulk-edit-title {
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--accent-purple);
+}
+
+.bulk-edit-count {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.bulk-edit-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.variable-card.selected {
+    border: 2px solid var(--accent-purple);
+    background: rgba(102, 126, 234, 0.1);
+}
+
+.variable-card .checkbox-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    margin-right: 8px;
+}
+
+.variable-card .checkbox-label input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.bulk-edit-modal {
+    max-width: 600px;
+}
+
+.bulk-edit-field {
+    margin-bottom: 16px;
+}
+
+.bulk-edit-field label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.bulk-edit-input {
+    width: 100%;
+    padding: 12px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-size: 15px;
+}
+
+.bulk-edit-input:focus {
+    border-color: var(--accent-purple);
+    outline: none;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .sidebar {

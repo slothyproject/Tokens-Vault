@@ -6,6 +6,10 @@ const VaultUI = {
     servicesConfig: null,
     vaultData: null,
     currentService: null,
+    
+    // Bulk edit mode state
+    bulkEditMode: false,
+    selectedVariables: [],
 
     async init() {
         // Check storage availability
@@ -119,6 +123,9 @@ const VaultUI = {
                     <p>${service.description || 'No description available'}</p>
                 </div>
                 <div class="service-actions">
+                    <button class="btn-secondary" onclick="VaultUI.toggleBulkEdit()">
+                        ${this.bulkEditMode ? '✓ Done' : '☐ Bulk Edit'}
+                    </button>
                     <button class="btn-secondary" onclick="VaultUI.showSharedVariables()">
                         🔗 Manage Shared Variables
                     </button>
@@ -218,8 +225,17 @@ const VaultUI = {
                 const hasGenerator = suggestions.generator;
 
                 html += `
-                    <div class="variable-card ${!validation.valid ? 'invalid' : validation.warning ? 'warning' : ''}">
+                    <div class="variable-card ${!validation.valid ? 'invalid' : validation.warning ? 'warning' : ''} ${this.bulkEditMode && this.selectedVariables.includes(variable.key) ? 'selected' : ''}">
                         <div class="variable-header">
+                            ${this.bulkEditMode ? `
+                                <label class="checkbox-label">
+                                    <input type="checkbox" 
+                                           ${this.selectedVariables.includes(variable.key) ? 'checked' : ''}
+                                           onchange="VaultUI.toggleVariableSelection('${variable.key}')"
+                                           class="bulk-checkbox">
+                                    <span></span>
+                                </label>
+                            ` : ''}
                             <label>${suggestions.icon || '📝'} ${variable.key}</label>
                             <div class="variable-badges">
                                 ${variable.required ? '<span class="badge required">Required</span>' : ''}
@@ -1281,6 +1297,189 @@ const VaultUI = {
                 setTimeout(() => btn.classList.remove('has-updates'), 3000);
             }
         });
+    },
+
+    // Bulk Edit Mode Methods
+    
+    // Toggle bulk edit mode
+    toggleBulkEdit() {
+        this.bulkEditMode = !this.bulkEditMode;
+        this.selectedVariables = [];
+        
+        // Re-render service content with checkboxes
+        if (this.currentService) {
+            this.selectService(this.currentService);
+        }
+        
+        // Show/hide bulk edit controls
+        this.renderBulkEditControls();
+    },
+    
+    // Render bulk edit controls
+    renderBulkEditControls() {
+        let controls = document.getElementById('bulkEditControls');
+        
+        if (this.bulkEditMode) {
+            if (!controls) {
+                controls = document.createElement('div');
+                controls.id = 'bulkEditControls';
+                controls.className = 'bulk-edit-controls';
+                
+                const serviceContent = document.getElementById('serviceContent');
+                if (serviceContent) {
+                    serviceContent.insertBefore(controls, serviceContent.firstChild);
+                }
+            }
+            
+            controls.innerHTML = `
+                <div class="bulk-edit-bar">
+                    <span class="bulk-edit-title">Bulk Edit Mode</span>
+                    <span class="bulk-edit-count" id="bulkEditCount">0 selected</span>
+                    <div class="bulk-edit-actions">
+                        <button class="btn-secondary" onclick="VaultUI.toggleBulkEdit()">Cancel</button>
+                        <button class="btn-primary" id="bulkEditBtn" onclick="VaultUI.showBulkEditForm()" disabled>
+                            Edit Selected
+                        </button>
+                    </div>
+                </div>
+            `;
+            controls.classList.remove('hidden');
+        } else if (controls) {
+            controls.classList.add('hidden');
+        }
+    },
+    
+    // Toggle variable selection
+    toggleVariableSelection(key) {
+        if (this.selectedVariables.includes(key)) {
+            this.selectedVariables = this.selectedVariables.filter(k => k !== key);
+        } else {
+            this.selectedVariables.push(key);
+        }
+        
+        // Update UI
+        this.updateBulkEditUI();
+        
+        // Re-render to show selection state
+        if (this.currentService) {
+            this.selectService(this.currentService);
+        }
+    },
+    
+    // Update bulk edit UI
+    updateBulkEditUI() {
+        const countEl = document.getElementById('bulkEditCount');
+        const btn = document.getElementById('bulkEditBtn');
+        
+        if (countEl) {
+            countEl.textContent = `${this.selectedVariables.length} selected`;
+        }
+        
+        if (btn) {
+            btn.disabled = this.selectedVariables.length === 0;
+        }
+    },
+    
+    // Show bulk edit form modal
+    showBulkEditForm() {
+        if (this.selectedVariables.length === 0) return;
+        
+        const serviceData = VaultCore.getServiceVariables(this.currentService);
+        
+        let modal = document.getElementById('bulkEditModal');
+        if (!modal) {
+            const modalHtml = `
+                <div id="bulkEditModal" class="modal">
+                    <div class="modal-overlay" onclick="VaultUI.closeBulkEditModal()"></div>
+                    <div class="modal-content bulk-edit-modal">
+                        <div class="modal-header">
+                            <h2>Edit ${this.selectedVariables.length} Variables</h2>
+                            <button class="btn-close" onclick="VaultUI.closeBulkEditModal()">✕</button>
+                        </div>
+                        <div class="modal-body" id="bulkEditBody"></div>
+                        <div class="modal-footer">
+                            <button class="btn-secondary" onclick="VaultUI.closeBulkEditModal()">Cancel</button>
+                            <button class="btn-primary" onclick="VaultUI.saveBulkEdit()">Save All Changes</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            modal = document.getElementById('bulkEditModal');
+        }
+        
+        // Populate form
+        const body = document.getElementById('bulkEditBody');
+        body.innerHTML = this.selectedVariables.map(key => {
+            const value = serviceData[key] || '';
+            const isSecret = VaultIntelligence?.getSuggestions(key)?.isSecret || false;
+            
+            return `
+                <div class="bulk-edit-field">
+                    <label for="bulk-${key}">${key}</label>
+                    <input type="${isSecret ? 'password' : 'text'}" 
+                           id="bulk-${key}" 
+                           value="${this.escapeHtml(value)}"
+                           class="bulk-edit-input">
+                </div>
+            `;
+        }).join('');
+        
+        modal.classList.remove('hidden');
+    },
+    
+    // Save bulk edits
+    saveBulkEdit() {
+        const updates = {};
+        let updateCount = 0;
+        
+        this.selectedVariables.forEach(key => {
+            const input = document.getElementById(`bulk-${key}`);
+            if (input) {
+                const newValue = input.value;
+                const currentValue = VaultCore.getVariable(this.currentService, key);
+                
+                // Only update if changed
+                if (newValue !== currentValue) {
+                    updates[key] = newValue;
+                    updateCount++;
+                }
+            }
+        });
+        
+        if (updateCount > 0) {
+            // Apply updates
+            const data = VaultCore.loadVaultData();
+            if (!data.services[this.currentService]) {
+                data.services[this.currentService] = {};
+            }
+            
+            Object.entries(updates).forEach(([key, value]) => {
+                data.services[this.currentService][key] = value;
+                VaultCore.addHistory(this.currentService, 'updated', { key, newValue: value });
+            });
+            
+            VaultCore.saveVaultData(data);
+            this.vaultData = data;
+            
+            this.showToast(`Updated ${updateCount} variables`, 'success');
+        } else {
+            this.showToast('No changes to save', 'info');
+        }
+        
+        this.closeBulkEditModal();
+        this.toggleBulkEdit(); // Exit bulk edit mode
+        
+        // Refresh view
+        if (this.currentService) {
+            this.selectService(this.currentService);
+        }
+    },
+    
+    // Close bulk edit modal
+    closeBulkEditModal() {
+        const modal = document.getElementById('bulkEditModal');
+        if (modal) modal.classList.add('hidden');
     }
 };
 

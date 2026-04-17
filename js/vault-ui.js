@@ -796,6 +796,100 @@ const VaultUI = {
                 .catch(() => this.showToast('Failed to copy', 'error'));
         }
     },
+
+    // Show quick add variable modal (standalone, no service selection required first)
+    showQuickAddModal() {
+        console.log('[VaultUI] Opening quick add modal');
+        
+        let modal = document.getElementById('quickAddModal');
+        if (!modal) {
+            const modalHtml = `
+                <div id="quickAddModal" class="modal">
+                    <div class="modal-overlay" onclick="VaultUI.closeQuickAddModal()"></div>
+                    <div class="modal-content quick-add-modal">
+                        <div class="modal-header">
+                            <h2>Add Variable</h2>
+                            <button class="btn-close" onclick="VaultUI.closeQuickAddModal()">✕</button>
+                        </div>
+                        <div class="modal-body">
+                            <p class="quick-add-intro">Add a variable to any service.</p>
+                            
+                            <div class="form-group">
+                                <label>Select Service</label>
+                                <select id="quickAddService" class="form-select">
+                                    <option value="">-- Choose a service --</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Variable Name</label>
+                                <input type="text" id="quickAddKey" placeholder="VARIABLE_NAME" class="form-input">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Value</label>
+                                <input type="text" id="quickAddValue" placeholder="Enter value" class="form-input">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn-secondary" onclick="VaultUI.closeQuickAddModal()">Cancel</button>
+                            <button class="btn-primary" onclick="VaultUI.quickAddVariable()">Add Variable</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            modal = document.getElementById('quickAddModal');
+        }
+        
+        // Populate service dropdown
+        const serviceSelect = document.getElementById('quickAddService');
+        if (this.servicesConfig?.services) {
+            serviceSelect.innerHTML = '<option value="">-- Choose a service --</option>' + 
+                this.servicesConfig.services.map(s => 
+                    `<option value="${s.id}">${s.name}</option>`
+                ).join('');
+        }
+        
+        // Clear previous values
+        document.getElementById('quickAddKey').value = '';
+        document.getElementById('quickAddValue').value = '';
+        
+        modal.classList.remove('hidden');
+    },
+
+    closeQuickAddModal() {
+        const modal = document.getElementById('quickAddModal');
+        if (modal) modal.classList.add('hidden');
+    },
+
+    quickAddVariable() {
+        const serviceId = document.getElementById('quickAddService').value;
+        const key = document.getElementById('quickAddKey').value.trim().toUpperCase().replace(/\s+/g, '_');
+        const value = document.getElementById('quickAddValue').value;
+        
+        if (!serviceId) {
+            this.showToast('Please select a service', 'error');
+            return;
+        }
+        
+        if (!key) {
+            this.showToast('Variable name is required', 'error');
+            return;
+        }
+        
+        // Add the variable
+        this.updateVariable(serviceId, key, value);
+        
+        this.closeQuickAddModal();
+        this.showToast(`Added ${key} to ${serviceId}`, 'success');
+        
+        // If we're currently viewing that service, refresh it
+        if (this.currentService === serviceId) {
+            this.selectService(serviceId);
+        }
+    },
+
     initQuickSearch() {
         // Create search modal HTML if not exists
         if (!document.getElementById('quickSearchModal')) {

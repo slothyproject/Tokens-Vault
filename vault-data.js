@@ -1,6 +1,56 @@
-// vault-data.js - Complete Encryption and Storage Management
+// vault-data.js - Complete Encryption and Storage Management (Brave Compatible)
 
 const VaultData = {
+    // Brave browser compatibility: Check storage availability
+    storageAvailable(type) {
+        try {
+            const storage = window[type],
+                x = '__storage_test__';
+            storage.setItem(x, x);
+            storage.removeItem(x);
+            return true;
+        } catch(e) {
+            console.warn(`${type} not available in this browser:`, e);
+            return false;
+        }
+    },
+
+    // Get storage mechanism (with Brave fallback)
+    getStorage(type) {
+        if (type === 'local' && this.storageAvailable('localStorage')) {
+            return localStorage;
+        }
+        if (type === 'session' && this.storageAvailable('sessionStorage')) {
+            return sessionStorage;
+        }
+        // Fallback: memory storage for Brave strict mode
+        if (!this._memoryStorage) {
+            this._memoryStorage = {};
+        }
+        return {
+            getItem: (key) => this._memoryStorage[key] || null,
+            setItem: (key, value) => { this._memoryStorage[key] = value; },
+            removeItem: (key) => { delete this._memoryStorage[key]; }
+        };
+    },
+
+    // Show Brave warning if storage is limited
+    checkBraveCompatibility() {
+        const isBrave = navigator.brave && navigator.brave.isBrave;
+        const localStorageWorks = this.storageAvailable('localStorage');
+        
+        if (isBrave && !localStorageWorks) {
+            console.warn('Brave browser detected with strict storage settings. Using memory fallback.');
+            return {
+                isBrave: true,
+                limitedStorage: true,
+                message: 'Vault will work but data will not persist between sessions. Consider allowing localStorage for this site.'
+            };
+        }
+        
+        return { isBrave: isBrave || false, limitedStorage: false };
+    },
+
     // Encryption/decryption
     encrypt(data, key) {
         return CryptoJS.AES.encrypt(JSON.stringify(data), key).toString();
@@ -33,25 +83,29 @@ const VaultData = {
         return CryptoJS.SHA256(key).toString();
     },
 
-    // Session management
+    // Session management (Brave compatible)
     getSessionKey() {
-        return sessionStorage.getItem('vault_session_key');
+        const storage = this.getStorage('session');
+        return storage.getItem('vault_session_key');
     },
 
     setSessionKey(key) {
-        sessionStorage.setItem('vault_session_key', key);
+        const storage = this.getStorage('session');
+        storage.setItem('vault_session_key', key);
     },
 
     clearSession() {
-        sessionStorage.removeItem('vault_session_key');
+        const storage = this.getStorage('session');
+        storage.removeItem('vault_session_key');
     },
 
-    // Vault data operations
+    // Vault data operations (Brave compatible)
     loadVaultData() {
         const key = this.getSessionKey();
         if (!key) return null;
 
-        const encrypted = localStorage.getItem('dissident_vault_data');
+        const storage = this.getStorage('local');
+        const encrypted = storage.getItem('dissident_vault_data');
         if (!encrypted) {
             return { 
                 services: {}, 
@@ -76,12 +130,15 @@ const VaultData = {
         if (!key) return false;
 
         const encrypted = this.encrypt(data, key);
-        localStorage.setItem('dissident_vault_data', encrypted);
+        const storage = this.getStorage('local');
+        storage.setItem('dissident_vault_data', encrypted);
         
         // Update metadata
-        const meta = JSON.parse(localStorage.getItem('dissident_vault_meta') || '{}');
+        const metaStorage = this.getStorage('local');
+        const metaStr = metaStorage.getItem('dissident_vault_meta');
+        const meta = metaStr ? JSON.parse(metaStr) : {};
         meta.lastAccessed = new Date().toISOString();
-        localStorage.setItem('dissident_vault_meta', JSON.stringify(meta));
+        metaStorage.setItem('dissident_vault_meta', JSON.stringify(meta));
         
         return true;
     },
@@ -127,7 +184,7 @@ const VaultData = {
         }
     },
 
-    // Initialize vault
+    // Initialize vault (Brave compatible)
     initialize(password) {
         const salt = this.generateSalt();
         const keyHash = this.hashPassword(password, salt);
@@ -140,7 +197,8 @@ const VaultData = {
             lastAccessed: new Date().toISOString()
         };
 
-        localStorage.setItem('dissident_vault_meta', JSON.stringify(meta));
+        const storage = this.getStorage('local');
+        storage.setItem('dissident_vault_meta', JSON.stringify(meta));
         
         const key = this.deriveKey(password, salt);
         this.setSessionKey(key);
@@ -157,27 +215,31 @@ const VaultData = {
         return initialData;
     },
 
-    // Verify password
+    // Verify password (Brave compatible)
     verifyPassword(password) {
-        const meta = JSON.parse(localStorage.getItem('dissident_vault_meta') || '{}');
+        const storage = this.getStorage('local');
+        const metaStr = storage.getItem('dissident_vault_meta');
+        const meta = metaStr ? JSON.parse(metaStr) : {};
         if (!meta.salt) return false;
 
         const keyHash = this.hashPassword(password, meta.salt);
         return keyHash === meta.keyHash;
     },
 
-    // Unlock vault
+    // Unlock vault (Brave compatible)
     unlock(password) {
         if (!this.verifyPassword(password)) {
             return { success: false, error: 'Invalid password' };
         }
 
-        const meta = JSON.parse(localStorage.getItem('dissident_vault_meta') || '{}');
+        const storage = this.getStorage('local');
+        const metaStr = storage.getItem('dissident_vault_meta');
+        const meta = metaStr ? JSON.parse(metaStr) : {};
         const key = this.deriveKey(password, meta.salt);
         this.setSessionKey(key);
         
         meta.lastAccessed = new Date().toISOString();
-        localStorage.setItem('dissident_vault_meta', JSON.stringify(meta));
+        storage.setItem('dissident_vault_meta', JSON.stringify(meta));
         
         return { success: true, data: this.loadVaultData() };
     },

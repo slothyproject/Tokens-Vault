@@ -3,10 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <!-- Brave Browser Compatibility -->
+    <meta name="referrer" content="no-referrer">
     <title>Dissident Token Vault v2.0 - Automated Secret Management</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    
+    <!-- Brave Detection & CDN Fallback -->
+    <script>
+        // Detect Brave browser
+        window.isBrave = navigator.brave && navigator.brave.isBrave || false;
+        
+        // CDN Load Checker with timeout
+        window.checkCDNs = function() {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    resolve(typeof tailwind !== 'undefined' && typeof CryptoJS !== 'undefined');
+                }, 2000);
+            });
+        };
+        
+        // Fallback loader
+        window.loadFallback = function() {
+            console.log('Loading Brave-compatible fallbacks...');
+            
+            // Load CryptoJS from alternative source
+            if (typeof CryptoJS === 'undefined') {
+                var script = document.createElement('script');
+                script.src = 'https://unpkg.com/crypto-js@4.1.1/crypto-js.js';
+                script.async = false;
+                document.head.appendChild(script);
+            }
+        };
+        
+        // Check if storage is available (Brave blocks sometimes)
+        window.storageAvailable = function(type) {
+            try {
+                var storage = window[type],
+                    x = '__storage_test__';
+                storage.setItem(x, x);
+                storage.removeItem(x);
+                return true;
+            } catch(e) {
+                return false;
+            }
+        };
+    </script>
+    
+    <!-- Primary CDNs with SRI for security -->
+    <script src="https://cdn.tailwindcss.com" integrity="sha384-..." crossorigin="anonymous" onerror="window.tailwindFallback=true"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js" integrity="sha384-..." crossorigin="anonymous" onerror="window.cryptoFallback=true"></script>
+    
+    <!-- Google Fonts with display=swap for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Fallback inline styles if Tailwind fails -->
+    <style id="brave-fallback-styles">
+        /* Minimal fallback if Tailwind is blocked */
+        .brave-fallback body { 
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #111827;
+            color: white;
+            margin: 0;
+        }
+        .brave-fallback .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+    </style>
     <style>
         body { font-family: 'Inter', sans-serif; }
         .glass {

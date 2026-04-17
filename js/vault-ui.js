@@ -91,7 +91,9 @@ const VaultUI = {
         const service = this.servicesConfig.services.find(s => s.id === serviceId);
         if (!service) return;
 
-        const serviceData = this.vaultData?.services?.[serviceId] || {};
+        // Use merged variables (shared + local, local wins)
+        const serviceData = VaultCore.getServiceVariables(serviceId);
+        const localData = this.vaultData?.services?.[serviceId] || {};
         
         // Hide welcome, show content
         const welcomeScreen = document.getElementById('welcomeScreen');
@@ -107,11 +109,55 @@ const VaultUI = {
                     <h2>${service.name}</h2>
                     <p>${service.description || 'No description available'}</p>
                 </div>
-                <button class="btn-primary" onclick="VaultUI.deployService('${serviceId}')">
-                    🚀 Deploy to Railway
-                </button>
+                <div class="service-actions">
+                    <button class="btn-secondary" onclick="VaultUI.showSharedVariables()">
+                        🔗 Manage Shared Variables
+                    </button>
+                    <button class="btn-primary" onclick="VaultUI.deployService('${serviceId}')">
+                        🚀 Deploy to Railway
+                    </button>
+                </div>
             </div>
         `;
+
+        // Show shared variables section if any inherited
+        const sharedVars = this.getSharedVariablesForService(serviceId);
+        if (Object.keys(sharedVars).length > 0) {
+            html += `
+                <div class="shared-section">
+                    <h3 class="shared-title">📋 Inherited Shared Variables</h3>
+                    <p class="shared-desc">These variables are shared across all services. Change in one place, updates everywhere.</p>
+                    <div class="variables-grid shared-grid">
+            `;
+            
+            Object.entries(sharedVars).forEach(([key, value]) => {
+                const isOverridden = key in localData;
+                html += `
+                    <div class="variable-card shared-variable ${isOverridden ? 'overridden' : ''}">
+                        <div class="variable-header">
+                            <label>${key}</label>
+                            ${isOverridden ? '<span class="badge overridden">Local Override</span>' : '<span class="badge shared">Shared</span>'}
+                        </div>
+                        <p class="variable-desc">${isOverridden ? 'Local value overrides shared' : 'Inherited from shared variables'}</p>
+                        <div class="variable-input">
+                            <input type="text" 
+                                   value="${this.escapeHtml(value)}"
+                                   ${isOverridden ? '' : 'disabled'}
+                                   placeholder="${isOverridden ? 'Local override' : 'Edit in Shared Variables'}"
+                                   onchange="${isOverridden ? `VaultUI.updateVariable('${serviceId}', '${key}', this.value)` : ''}"
+                            >
+                        </div>
+                        ${isOverridden ? `
+                            <button class="btn-link" onclick="VaultUI.removeLocalOverride('${serviceId}', '${key}')">
+                                ↩️ Revert to Shared Value
+                            </button>
+                        ` : ''}
+                    </div>
+                `;
+            });
+            
+            html += '</div></div>';
+        }
 
         // Render categories if they exist
         if (service.categories && service.categories.length > 0) {
@@ -728,6 +774,182 @@ const VaultUI = {
                 }
             });
         }, 100);
+    },
+
+    // Get shared variables that apply to this service
+    getSharedVariablesForService(serviceId) {
+        const data = VaultCore.loadVaultData();
+        if (!data || !data.shared) return {};
+        
+        // Filter shared vars that aren't overridden locally
+        const serviceVars = data.services[serviceId] || {};
+        const sharedVars = {};
+        
+        Object.entries(data.shared).forEach(([key, value]) => {
+            // Include all shared vars, mark if overridden
+            sharedVars[key] = value;
+        });
+        
+        return sharedVars;
+    },
+
+    // Show shared variables management modal
+    showSharedVariables() {
+        const data = VaultCore.loadVaultData();
+        if (!data) return;
+
+        // Create or update modal
+        let modal = document.getElementById('sharedVariablesModal');
+        if (!modal) {
+            const modalHtml = `
+                <div id="sharedVariablesModal" class="modal">
+                    <div class="modal-overlay" onclick="VaultUI.closeSharedVariables()"></div>
+                    <div class="modal-content shared-variables-modal">
+                        <div class="modal-header">
+                            <h2>🔗 Shared Variables</h2>
+                            <button class="btn-close" onclick="VaultUI.closeSharedVariables()">✕</button>
+                        </div>
+                        <div class="modal-body">
+                            <p class="shared-intro">These variables are inherited by all services. Change them here to update everywhere.</p>
+                            <div id="sharedVariablesList" class="shared-variables-list"></div>
+                            <div class="add-shared-form">
+                                <h4>Add New Shared Variable</h4>
+                                <div class="form-row">
+                                    <input type="text" id="newSharedKey" placeholder="VARIABLE_NAME">
+                                    <input type="text" id="newSharedValue" placeholder="value">
+                                    <button class="btn-primary" onclick="VaultUI.addSharedVariable()">Add</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            modal = document.getElementById('sharedVariablesModal');
+        }
+
+        // Populate list
+        this.renderSharedVariablesList();
+        
+        modal.classList.remove('hidden');
+    },
+
+    // Render shared variables list
+    renderSharedVariablesList() {
+        const data = VaultCore.loadVaultData();
+        const container = document.getElementById('sharedVariablesList');
+        if (!container || !data) return;
+
+        const shared = data.shared || {};
+        
+        if (Object.keys(shared).length === 0) {
+            container.innerHTML = '<p class="no-shared">No shared variables yet. Add one below.</p>';
+            return;
+        }
+
+        let html = '';
+        Object.entries(shared).forEach(([key, value]) => {
+            html += `
+                <div class="shared-variable-item">
+                    <div class="shared-var-info">
+                        <code class="shared-key">${key}</code>
+                        <span class="shared-value">${this.escapeHtml(value)}</span>
+                    </div>
+                    <div class="shared-var-actions">
+                        <button class="btn-icon" onclick="VaultUI.editSharedVariable('${key}')" title="Edit">✏️</button>
+                        <button class="btn-icon" onclick="VaultUI.deleteSharedVariable('${key}')" title="Delete">🗑️</button>
+                    </div>
+                </div>
+            `;
+        });
+        
+        container.innerHTML = html;
+    },
+
+    // Add new shared variable
+    addSharedVariable() {
+        const keyInput = document.getElementById('newSharedKey');
+        const valueInput = document.getElementById('newSharedValue');
+        
+        const key = keyInput.value.trim().toUpperCase();
+        const value = valueInput.value.trim();
+        
+        if (!key) {
+            this.showToast('Variable name required', 'error');
+            return;
+        }
+        
+        if (VaultCore.saveSharedVariable(key, value)) {
+            this.showToast(`Shared variable ${key} added`, 'success');
+            keyInput.value = '';
+            valueInput.value = '';
+            this.renderSharedVariablesList();
+            
+            // Refresh current service view if open
+            if (this.currentService) {
+                this.selectService(this.currentService);
+            }
+        }
+    },
+
+    // Edit shared variable
+    editSharedVariable(key) {
+        const data = VaultCore.loadVaultData();
+        if (!data || !data.shared) return;
+        
+        const currentValue = data.shared[key];
+        const newValue = prompt(`Edit ${key}:`, currentValue);
+        
+        if (newValue !== null && newValue !== currentValue) {
+            if (VaultCore.saveSharedVariable(key, newValue)) {
+                this.showToast(`Shared variable ${key} updated`, 'success');
+                this.renderSharedVariablesList();
+                
+                // Refresh current service view
+                if (this.currentService) {
+                    this.selectService(this.currentService);
+                }
+            }
+        }
+    },
+
+    // Delete shared variable
+    deleteSharedVariable(key) {
+        if (!confirm(`Delete shared variable ${key}? This will affect all services using it.`)) {
+            return;
+        }
+        
+        if (VaultCore.deleteSharedVariable(key)) {
+            this.showToast(`Shared variable ${key} deleted`, 'success');
+            this.renderSharedVariablesList();
+            
+            // Refresh current service view
+            if (this.currentService) {
+                this.selectService(this.currentService);
+            }
+        }
+    },
+
+    // Remove local override (revert to shared)
+    removeLocalOverride(serviceId, key) {
+        if (!confirm(`Remove local override for ${key}? Will use shared value.`)) {
+            return;
+        }
+        
+        const data = VaultCore.loadVaultData();
+        if (data && data.services[serviceId]) {
+            delete data.services[serviceId][key];
+            VaultCore.saveVaultData(data);
+            
+            this.showToast(`Reverted ${key} to shared value`, 'success');
+            this.selectService(serviceId);
+        }
+    },
+
+    // Close shared variables modal
+    closeSharedVariables() {
+        const modal = document.getElementById('sharedVariablesModal');
+        if (modal) modal.classList.add('hidden');
     }
 };
 

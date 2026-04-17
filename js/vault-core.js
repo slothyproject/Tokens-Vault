@@ -229,6 +229,7 @@ const VaultCore = {
         const encrypted = this.safeGet('dissident_vault_data', 'local');
         if (!encrypted) {
             return { 
+                shared: {},         // NEW: Shared variables across all services
                 services: {}, 
                 history: [], 
                 railwayToken: null, 
@@ -241,6 +242,11 @@ const VaultCore = {
         if (!decrypted) {
             console.error('Failed to decrypt vault data');
             return null;
+        }
+
+        // Ensure shared section exists (migration for existing vaults)
+        if (!decrypted.shared) {
+            decrypted.shared = {};
         }
 
         return decrypted;
@@ -300,6 +306,7 @@ const VaultCore = {
             this.setSessionKey(key);
 
             const initialData = { 
+                shared: {},         // NEW: Shared variables across all services
                 services: {}, 
                 history: [], 
                 railwayToken: null, 
@@ -398,6 +405,83 @@ const VaultCore = {
         this.saveVaultData(data);
         
         return { success: true };
+    },
+
+    // Shared Variables Management
+    
+    // Get variable value (resolves shared vs local priority)
+    getVariable(serviceId, key) {
+        const data = this.loadVaultData();
+        if (!data) return null;
+        
+        // Priority: Local service variable > Shared variable
+        const serviceVars = data.services[serviceId] || {};
+        if (key in serviceVars) {
+            return serviceVars[key];
+        }
+        
+        // Fall back to shared
+        return data.shared[key] || null;
+    },
+    
+    // Get all variables for a service (merged shared + local)
+    getServiceVariables(serviceId) {
+        const data = this.loadVaultData();
+        if (!data) return {};
+        
+        const serviceVars = data.services[serviceId] || {};
+        
+        // Merge: service vars override shared
+        return {
+            ...data.shared,
+            ...serviceVars
+        };
+    },
+    
+    // Check if variable is inherited from shared
+    isSharedVariable(serviceId, key) {
+        const data = this.loadVaultData();
+        if (!data) return false;
+        
+        const serviceVars = data.services[serviceId] || {};
+        return (key in data.shared) && !(key in serviceVars);
+    },
+    
+    // Save shared variable
+    saveSharedVariable(key, value) {
+        const data = this.loadVaultData();
+        if (!data) return false;
+        
+        if (!data.shared) data.shared = {};
+        
+        const oldValue = data.shared[key];
+        data.shared[key] = value;
+        
+        this.saveVaultData(data);
+        
+        // Add to history
+        this.addHistory('shared', oldValue ? 'updated' : 'created', { 
+            key, 
+            oldValue, 
+            newValue: value 
+        });
+        
+        return true;
+    },
+    
+    // Delete shared variable
+    deleteSharedVariable(key) {
+        const data = this.loadVaultData();
+        if (!data || !data.shared) return false;
+        
+        const oldValue = data.shared[key];
+        delete data.shared[key];
+        
+        this.saveVaultData(data);
+        
+        this.addHistory('shared', 'deleted', { key, oldValue });
+        
+        return true;
     },
 
     // History management

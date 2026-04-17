@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Dissident Token Vault</title>
+    <title>Dissident Token Vault v2.5</title>
     <link rel="stylesheet" href="css/vault.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 </head>
@@ -14,10 +14,26 @@
         <div class="nav-brand">
             <span class="logo-icon">🔐</span>
             <span class="brand-text">Dissident<span class="gradient">Vault</span></span>
-            <span class="version">v2.0</span>
+            <span class="version">v2.5</span>
         </div>
 
         <div class="nav-actions">
+            <!-- Session Timeout Indicator -->
+            <div class="session-timer" id="sessionTimer" title="Session expires in...">
+                <span class="timer-icon">⏱️</span>
+                <span class="timer-text" id="timerText">15:00</span>
+            </div>
+
+            <!-- Quick Search Button -->
+            <button class="btn-icon" onclick="VaultUI.openQuickSearch()" title="Quick Search (Ctrl+K)">
+                🔍
+            </button>
+
+            <!-- Keyboard Shortcuts -->
+            <button class="btn-icon" onclick="showKeyboardShortcuts()" title="Keyboard Shortcuts (Ctrl+/)">
+                ⌨️
+            </button>
+
             <div class="sync-status" id="syncStatus">
                 <span class="status-dot online"></span>
                 <span>Synced</span>
@@ -27,7 +43,7 @@
                 ⚙️
             </button>
 
-            <button class="btn-icon" onclick="lockVault()" title="Lock">
+            <button class="btn-icon" onclick="lockVault()" title="Lock (Ctrl+L)">
                 🔒
             </button>
         </div>
@@ -46,8 +62,12 @@
             </div>
 
             <div class="sidebar-footer">
+                <button class="btn-secondary btn-block" onclick="showBackupModal()">
+                    💾 Backup & Restore
+                </button>
+
                 <button class="btn-secondary btn-block" onclick="importTokens()">
-                    📥 Import
+                    📥 Import .env
                 </button>
 
                 <button class="btn-secondary btn-block" onclick="downloadConfig()">
@@ -58,10 +78,15 @@
 
         <!-- Content Area -->
         <main class="content">
+            <!-- Health Dashboard -->
+            <div id="healthDashboard" class="health-dashboard-container">
+                <!-- Health dashboard loaded by vault-health.js -->
+            </div>
+
             <div id="welcomeScreen" class="welcome-screen">
                 <div class="welcome-card">
                     <div class="welcome-icon">🔐</div>
-                    <h1>Welcome to Token Vault</h1>
+                    <h1>Welcome to Token Vault v2.5</h1>
                     <p>Select a service from the sidebar to manage its secrets</p>
 
                     <div class="features">
@@ -77,6 +102,23 @@
                             <span class="feature-icon">🚀</span>
                             <span>Railway Deployment</span>
                         </div>
+                        <div class="feature">
+                            <span class="feature-icon">🔍</span>
+                            <span>Quick Search (Ctrl+K)</span>
+                        </div>
+                        <div class="feature">
+                            <span class="feature-icon">💾</span>
+                            <span>Encrypted Backups</span>
+                        </div>
+                        <div class="feature">
+                            <span class="feature-icon">⏱️</span>
+                            <span>Session Timeout</span>
+                        </div>
+                    </div>
+
+                    <div class="keyboard-hint">
+                        <p>Press <kbd>Ctrl</kbd> + <kbd>K</kbd> for Quick Search</p>
+                        <p>Press <kbd>Ctrl</kbd> + <kbd>/</kbd> for Shortcuts</p>
                     </div>
                 </div>
             </div>
@@ -100,6 +142,23 @@
             </div>
 
             <div class="modal-body">
+                <!-- Discord Integration -->
+                <div class="setting-group">
+                    <h3>Discord Notifications</h3>
+                    <div class="form-group">
+                        <label>Discord Webhook URL</label>
+                        <input type="password" id="discordWebhook" placeholder="https://discord.com/api/webhooks/...">
+                        <p class="help-text">Get webhook URL from Discord channel settings</p>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox">
+                            <input type="checkbox" id="discordEnabled">
+                            <span>Enable Discord notifications</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- GitHub Integration -->
                 <div class="setting-group">
                     <h3>GitHub Integration</h3>
                     <div class="form-group">
@@ -109,19 +168,47 @@
                     </div>
                 </div>
 
+                <!-- Railway Integration -->
                 <div class="setting-group">
                     <h3>Railway Integration</h3>
                     <div class="form-group">
                         <label>Railway Token</label>
                         <input type="password" id="railwayToken" placeholder="Enter Railway API token">
                     </div>
-
                     <div class="form-group">
                         <label class="checkbox">
                             <input type="checkbox" id="autoDeploy">
                             <span>Auto-deploy when variables change</span>
                         </label>
                     </div>
+                    <div class="form-group">
+                        <label class="checkbox">
+                            <input type="checkbox" id="checkDrift">
+                            <span>Check for configuration drift on load</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Session Settings -->
+                <div class="setting-group">
+                    <h3>Session Settings</h3>
+                    <div class="form-group">
+                        <label>Session Timeout (minutes)</label>
+                        <select id="sessionTimeout">
+                            <option value="5">5 minutes</option>
+                            <option value="15" selected>15 minutes</option>
+                            <option value="30">30 minutes</option>
+                            <option value="60">1 hour</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Security -->
+                <div class="setting-group">
+                    <h3>Security</h3>
+                    <button class="btn-secondary" onclick="showPasswordChangeModal()">
+                        🔑 Change Master Password
+                    </button>
                 </div>
             </div>
 
@@ -132,9 +219,194 @@
         </div>
     </div>
 
+    <!-- Password Change Modal -->
+    <div id="passwordChangeModal" class="modal hidden">
+        <div class="modal-overlay" onclick="closeModal('passwordChangeModal')"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Change Master Password</h2>
+                <button class="btn-close" onclick="closeModal('passwordChangeModal')">✕</button>
+            </div>
+
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Current Password</label>
+                    <input type="password" id="currentPassword" placeholder="Enter current password">
+                </div>
+                <div class="form-group">
+                    <label>New Password</label>
+                    <input type="password" id="newPassword" placeholder="Minimum 8 characters">
+                    <div class="password-strength">
+                        <div class="strength-bar" id="strengthBar"></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Confirm New Password</label>
+                    <input type="password" id="confirmNewPassword" placeholder="Re-enter new password">
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeModal('passwordChangeModal')">Cancel</button>
+                <button class="btn-primary" onclick="changePassword()">Change Password</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Backup & Restore Modal -->
+    <div id="backupModal" class="modal hidden">
+        <div class="modal-overlay" onclick="closeModal('backupModal')"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>💾 Backup & Restore</h2>
+                <button class="btn-close" onclick="closeModal('backupModal')">✕</button>
+            </div>
+
+            <div class="modal-body">
+                <!-- Create Backup -->
+                <div class="backup-section">
+                    <h3>Create Backup</h3>
+                    <p>Export your vault as an encrypted file. Only you can decrypt it.</p>
+                    <div class="form-group">
+                        <label>Backup Notes (optional)</label>
+                        <input type="text" id="backupNotes" placeholder="e.g., Before major changes">
+                    </div>
+                    <button class="btn-primary" onclick="createBackup()">
+                        📥 Create Encrypted Backup
+                    </button>
+                </div>
+
+                <div class="divider"><span>OR</span></div>
+
+                <!-- Restore Backup -->
+                <div class="backup-section">
+                    <h3>Restore Backup</h3>
+                    <p>Restore from a previously created backup file.</p>
+                    <div class="form-group">
+                        <label>Select Backup File</label>
+                        <input type="file" id="backupFileInput" accept=".json" onchange="handleBackupFileSelect(this)">
+                    </div>
+                    <div id="backupFileInfo" class="backup-file-info hidden"></div>
+                    <button class="btn-primary" id="restoreBackupBtn" onclick="restoreBackup()" disabled>
+                        📤 Restore from Backup
+                    </button>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeModal('backupModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Keyboard Shortcuts Modal -->
+    <div id="shortcutsModal" class="modal hidden">
+        <div class="modal-overlay" onclick="closeModal('shortcutsModal')"></div>
+        <div class="modal-content shortcuts-modal">
+            <div class="modal-header">
+                <h2>⌨️ Keyboard Shortcuts</h2>
+                <button class="btn-close" onclick="closeModal('shortcutsModal')">✕</button>
+            </div>
+
+            <div class="modal-body">
+                <div class="shortcuts-grid">
+                    <div class="shortcut-item">
+                        <kbd>Ctrl</kbd> + <kbd>K</kbd>
+                        <span>Quick Search</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Ctrl</kbd> + <kbd>S</kbd>
+                        <span>Save Current Service</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Ctrl</kbd> + <kbd>L</kbd>
+                        <span>Lock Vault</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Ctrl</kbd> + <kbd>/</kbd>
+                        <span>Show Shortcuts</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Esc</kbd>
+                        <span>Close Modal / Go Back</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>↑</kbd> <kbd>↓</kbd>
+                        <span>Navigate in Search</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Enter</kbd>
+                        <span>Select Item</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Modal -->
+    <div id="importModal" class="modal hidden">
+        <div class="modal-overlay" onclick="closeModal('importModal')"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📥 Import from .env</h2>
+                <button class="btn-close" onclick="closeModal('importModal')">✕</button>
+            </div>
+
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Select Service</label>
+                    <select id="importServiceSelect">
+                        <!-- Options loaded dynamically -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Select .env File</label>
+                    <input type="file" id="envFileInput" accept=".env,.txt" onchange="handleEnvFileSelect(this)">
+                </div>
+                <div id="importPreview" class="import-preview hidden"></div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeModal('importModal')">Cancel</button>
+                <button class="btn-primary" id="importConfirmBtn" onclick="confirmImport()" disabled>
+                    Import Variables
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
     <script src="js/vault-core.js"></script>
     <script src="js/vault-ui.js"></script>
+    <script src="js/vault-health.js"></script>
+    <script src="js/vault-discord.js"></script>
+    <script src="js/vault-backup.js"></script>
+    <script src="js/vault-railway-sync.js"></script>
+
     <script>
+        // Session timer update
+        function updateSessionTimer() {
+            const lastActivity = VaultCore.sessionTimeout.lastActivity;
+            const timeoutMinutes = VaultCore.config.sessionTimeoutMinutes;
+            const elapsed = (Date.now() - lastActivity) / 1000 / 60; // minutes
+            const remaining = Math.max(0, timeoutMinutes - elapsed);
+            
+            const minutes = Math.floor(remaining);
+            const seconds = Math.floor((remaining - minutes) * 60);
+            
+            const timerText = document.getElementById('timerText');
+            if (timerText) {
+                timerText.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                
+                // Warning color if less than 2 minutes
+                if (remaining < 2) {
+                    timerText.style.color = '#ef4444';
+                } else {
+                    timerText.style.color = '';
+                }
+            }
+        }
+
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             if (!VaultCore.getSessionKey()) {
@@ -142,11 +414,42 @@
                 return;
             }
 
+            // Start session timeout monitoring
+            VaultCore.startSessionTimeout();
+            
+            // Update timer every second
+            setInterval(updateSessionTimer, 1000);
+            updateSessionTimer();
+
+            // Initialize all modules
             VaultUI.init();
+            VaultHealth.init();
+            VaultDiscord.init();
+            VaultBackup.init();
+            VaultRailwaySync.init();
+
+            // Setup keyboard shortcuts
+            setupKeyboardShortcuts();
         });
 
+        // Keyboard shortcuts setup
+        function setupKeyboardShortcuts() {
+            document.addEventListener('keydown', (e) => {
+                // Ctrl/Cmd + S - Save
+                if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                    e.preventDefault();
+                    saveCurrentService();
+                }
+                // Ctrl/Cmd + L - Lock
+                if ((e.ctrlKey || e.metaKey) && e.key === 'l') {
+                    e.preventDefault();
+                    lockVault();
+                }
+            });
+        }
+
         function lockVault() {
-            VaultCore.clearSession();
+            VaultCore.lock();
             window.location.href = 'login.html';
         }
 
@@ -156,6 +459,9 @@
                 document.getElementById('githubToken').value = vaultData.githubToken || '';
                 document.getElementById('railwayToken').value = vaultData.railwayToken || '';
                 document.getElementById('autoDeploy').checked = vaultData.autoDeploy || false;
+                document.getElementById('discordWebhook').value = vaultData.discordWebhook || '';
+                document.getElementById('discordEnabled').checked = vaultData.discordEnabled || false;
+                document.getElementById('checkDrift').checked = vaultData.checkDrift !== false; // default true
             }
             document.getElementById('settingsModal').classList.remove('hidden');
         }
@@ -166,7 +472,20 @@
                 vaultData.githubToken = document.getElementById('githubToken').value;
                 vaultData.railwayToken = document.getElementById('railwayToken').value;
                 vaultData.autoDeploy = document.getElementById('autoDeploy').checked;
+                vaultData.discordWebhook = document.getElementById('discordWebhook').value;
+                vaultData.discordEnabled = document.getElementById('discordEnabled').checked;
+                vaultData.checkDrift = document.getElementById('checkDrift').checked;
+                
+                // Update session timeout
+                const timeoutSelect = document.getElementById('sessionTimeout');
+                if (timeoutSelect) {
+                    VaultCore.config.sessionTimeoutMinutes = parseInt(timeoutSelect.value);
+                }
+                
                 VaultCore.saveVaultData(vaultData);
+                
+                // Re-init Discord with new webhook
+                VaultDiscord.init(vaultData.discordWebhook);
             }
             closeModal('settingsModal');
             VaultUI.showToast('Settings saved', 'success');
@@ -175,6 +494,164 @@
         function closeModal(id) {
             document.getElementById(id).classList.add('hidden');
         }
+
+        function showPasswordChangeModal() {
+            document.getElementById('passwordChangeModal').classList.remove('hidden');
+        }
+
+        function changePassword() {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmNewPassword').value;
+
+            if (newPassword.length < 8) {
+                VaultUI.showToast('Password must be at least 8 characters', 'error');
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                VaultUI.showToast('Passwords do not match', 'error');
+                return;
+            }
+
+            const result = VaultCore.changePassword(currentPassword, newPassword);
+            if (result.success) {
+                closeModal('passwordChangeModal');
+                VaultUI.showToast('Password changed successfully', 'success');
+                // Clear form
+                document.getElementById('currentPassword').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmNewPassword').value = '';
+            } else {
+                VaultUI.showToast(result.error || 'Failed to change password', 'error');
+            }
+        }
+
+        function showKeyboardShortcuts() {
+            document.getElementById('shortcutsModal').classList.remove('hidden');
+        }
+
+        function showBackupModal() {
+            document.getElementById('backupModal').classList.remove('hidden');
+        }
+
+        function createBackup() {
+            const notes = document.getElementById('backupNotes').value;
+            VaultBackup.createBackup(notes)
+                .then(result => {
+                    VaultUI.showToast(`Backup created: ${result.filename}`, 'success');
+                    closeModal('backupModal');
+                })
+                .catch(error => {
+                    VaultUI.showToast('Backup failed: ' + error.message, 'error');
+                });
+        }
+
+        let selectedBackupFile = null;
+
+        function handleBackupFileSelect(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            selectedBackupFile = file;
+            
+            VaultBackup.verifyBackup(file)
+                .then(result => {
+                    const infoDiv = document.getElementById('backupFileInfo');
+                    if (result.valid) {
+                        infoDiv.innerHTML = `
+                            <p>✅ Valid backup file</p>
+                            <p>Created: ${new Date(result.createdAt).toLocaleString()}</p>
+                            <p>Size: ${result.size}</p>
+                        `;
+                        infoDiv.classList.remove('hidden');
+                        document.getElementById('restoreBackupBtn').disabled = false;
+                    } else {
+                        infoDiv.innerHTML = `<p>❌ ${result.error}</p>`;
+                        infoDiv.classList.remove('hidden');
+                        document.getElementById('restoreBackupBtn').disabled = true;
+                    }
+                })
+                .catch(error => {
+                    VaultUI.showToast('Failed to verify backup: ' + error.message, 'error');
+                });
+        }
+
+        function restoreBackup() {
+            if (!selectedBackupFile) return;
+
+            VaultBackup.restoreBackup(selectedBackupFile)
+                .then(result => {
+                    if (result.success) {
+                        VaultUI.showToast('Backup restored successfully', 'success');
+                        closeModal('backupModal');
+                        // Reload UI
+                        VaultUI.init();
+                    }
+                })
+                .catch(error => {
+                    VaultUI.showToast('Restore failed: ' + error.message, 'error');
+                });
+        }
+
+        function importTokens() {
+            // Populate service select
+            const select = document.getElementById('importServiceSelect');
+            select.innerHTML = VaultUI.servicesConfig.services.map(s => 
+                `<option value="${s.id}">${s.name}</option>`
+            ).join('');
+            
+            document.getElementById('importModal').classList.remove('hidden');
+        }
+
+        let selectedEnvFile = null;
+
+        function handleEnvFileSelect(input) {
+            selectedEnvFile = input.files[0];
+            document.getElementById('importConfirmBtn').disabled = !selectedEnvFile;
+        }
+
+        function confirmImport() {
+            if (!selectedEnvFile) return;
+            
+            const serviceId = document.getElementById('importServiceSelect').value;
+            
+            VaultBackup.importFromEnv(serviceId, selectedEnvFile)
+                .then(result => {
+                    VaultUI.showToast(`Imported ${result.imported} variables`, 'success');
+                    closeModal('importModal');
+                    VaultUI.selectService(serviceId);
+                })
+                .catch(error => {
+                    VaultUI.showToast('Import failed: ' + error.message, 'error');
+                });
+        }
+
+        function downloadConfig() {
+            VaultBackup.exportAsJson()
+                .then(result => {
+                    VaultUI.showToast(`Exported: ${result.filename}`, 'success');
+                })
+                .catch(error => {
+                    VaultUI.showToast('Export failed: ' + error.message, 'error');
+                });
+        }
+
+        function saveCurrentService() {
+            // Trigger save on current service
+            if (VaultUI.currentService) {
+                VaultUI.showToast('Service saved', 'success');
+            }
+        }
+
+        // Password strength indicator
+        document.getElementById('newPassword')?.addEventListener('input', (e) => {
+            const bar = document.getElementById('strengthBar');
+            const length = e.target.value.length;
+            const strength = Math.min(length / 12 * 100, 100);
+            bar.style.width = strength + '%';
+            bar.style.background = length < 8 ? '#ef4444' : length < 12 ? '#f59e0b' : '#10b981';
+        });
     </script>
 </body>
 </html>

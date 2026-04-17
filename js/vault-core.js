@@ -3,6 +3,116 @@
  */
 
 const VaultCore = {
+    // Configuration
+    config: {
+        sessionTimeoutMinutes: 15, // Auto-lock after 15 minutes of inactivity
+        warningMinutes: 1 // Show warning 1 minute before lock
+    },
+
+    // Session timeout tracking
+    sessionTimeout: {
+        lastActivity: Date.now(),
+        warningShown: false,
+        checkInterval: null,
+        isLocked: false
+    },
+
+    // Start session timeout monitoring
+    startSessionTimeout() {
+        // Reset last activity
+        this.resetSessionTimeout();
+        
+        // Add event listeners for activity
+        const events = ['mousedown', 'keydown', 'touchstart', 'scroll'];
+        events.forEach(event => {
+            document.addEventListener(event, () => this.resetSessionTimeout(), { passive: true });
+        });
+        
+        // Start checking interval
+        this.sessionTimeout.checkInterval = setInterval(() => {
+            this.checkSessionTimeout();
+        }, 10000); // Check every 10 seconds
+        
+        console.log('[VaultCore] Session timeout monitoring started');
+    },
+    
+    // Reset session timeout on activity
+    resetSessionTimeout() {
+        this.sessionTimeout.lastActivity = Date.now();
+        this.sessionTimeout.warningShown = false;
+        
+        // Hide warning if shown
+        const warningEl = document.getElementById('timeoutWarning');
+        if (warningEl) warningEl.classList.add('hidden');
+    },
+    
+    // Check if session should timeout
+    checkSessionTimeout() {
+        if (this.sessionTimeout.isLocked) return;
+        
+        const inactiveTime = Date.now() - this.sessionTimeout.lastActivity;
+        const timeoutMs = this.config.sessionTimeoutMinutes * 60 * 1000;
+        const warningMs = (this.config.sessionTimeoutMinutes - this.config.warningMinutes) * 60 * 1000;
+        
+        // Show warning 1 minute before timeout
+        if (inactiveTime > warningMs && !this.sessionTimeout.warningShown) {
+            this.showTimeoutWarning();
+            this.sessionTimeout.warningShown = true;
+        }
+        
+        // Lock if timeout reached
+        if (inactiveTime > timeoutMs) {
+            this.lockDueToTimeout();
+        }
+    },
+    
+    // Show timeout warning modal
+    showTimeoutWarning() {
+        const warningHtml = `
+            <div id="timeoutWarning" class="timeout-warning">
+                <div class="timeout-content">
+                    <h3>⏰ Session Timeout Warning</h3>
+                    <p>Your vault will lock in ${this.config.warningMinutes} minute(s) due to inactivity.</p>
+                    <button class="btn-primary" onclick="VaultCore.dismissTimeoutWarning()">
+                        Continue Session
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        // Append to body if not exists
+        if (!document.getElementById('timeoutWarning')) {
+            document.body.insertAdjacentHTML('beforeend', warningHtml);
+        } else {
+            document.getElementById('timeoutWarning').classList.remove('hidden');
+        }
+    },
+    
+    // Dismiss timeout warning
+    dismissTimeoutWarning() {
+        this.resetSessionTimeout();
+        const warningEl = document.getElementById('timeoutWarning');
+        if (warningEl) warningEl.classList.add('hidden');
+    },
+    
+    // Lock vault due to timeout
+    lockDueToTimeout() {
+        this.sessionTimeout.isLocked = true;
+        clearInterval(this.sessionTimeout.checkInterval);
+        
+        // Clear session
+        this.lock();
+        
+        // Redirect to login
+        window.location.href = 'login.html?timeout=true';
+    },
+    
+    // Stop session timeout monitoring
+    stopSessionTimeout() {
+        clearInterval(this.sessionTimeout.checkInterval);
+        console.log('[VaultCore] Session timeout monitoring stopped');
+    },
+
     // In-memory fallback for Brave/restricted browsers
     memoryStorage: {
         vault_session_key: null,

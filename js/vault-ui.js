@@ -24,6 +24,7 @@ const VaultUI = {
         await this.loadServicesConfig();
         this.vaultData = VaultCore.loadVaultData();
         this.renderServices();
+        this.initQuickSearch(); // Initialize quick search
     },
 
     async loadServicesConfig() {
@@ -466,6 +467,267 @@ const VaultUI = {
             toast.style.transition = 'all 0.3s';
             setTimeout(() => toast.remove(), 300);
         }, 5000);
+    },
+
+    // Initialize Quick Search
+    initQuickSearch() {
+        // Create search modal HTML if not exists
+        if (!document.getElementById('quickSearchModal')) {
+            const modalHtml = `
+                <div id="quickSearchModal" class="modal hidden">
+                    <div class="modal-overlay" onclick="VaultUI.closeQuickSearch()"></div>
+                    <div class="modal-content quick-search-modal">
+                        <div class="quick-search-header">
+                            <input type="text" 
+                                   id="quickSearchInput" 
+                                   placeholder="Search variables (Ctrl+K)" 
+                                   autocomplete="off">
+                            <button class="btn-close" onclick="VaultUI.closeQuickSearch()">✕</button>
+                        </div>
+                        <div id="quickSearchResults" class="quick-search-results"></div>
+                        <div class="quick-search-footer">
+                            <span>↑↓ Navigate</span>
+                            <span>↵ Select</span>
+                            <span>Esc Close</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            // Add keyboard shortcut
+            document.addEventListener('keydown', (e) => {
+                // Ctrl/Cmd + K
+                if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                    e.preventDefault();
+                    this.openQuickSearch();
+                }
+                // Escape to close
+                if (e.key === 'Escape' && !document.getElementById('quickSearchModal').classList.contains('hidden')) {
+                    this.closeQuickSearch();
+                }
+            });
+            
+            // Add input handler
+            document.getElementById('quickSearchInput').addEventListener('input', (e) => {
+                this.performQuickSearch(e.target.value);
+            });
+            
+            // Add keyboard navigation
+            document.getElementById('quickSearchInput').addEventListener('keydown', (e) => {
+                this.handleSearchNavigation(e);
+            });
+        }
+    },
+    
+    // Open quick search modal
+    openQuickSearch() {
+        const modal = document.getElementById('quickSearchModal');
+        const input = document.getElementById('quickSearchInput');
+        
+        modal.classList.remove('hidden');
+        input.value = '';
+        input.focus();
+        
+        // Clear previous results
+        document.getElementById('quickSearchResults').innerHTML = '';
+    },
+    
+    // Close quick search modal
+    closeQuickSearch() {
+        const modal = document.getElementById('quickSearchModal');
+        modal.classList.add('hidden');
+    },
+    
+    // Perform search
+    performQuickSearch(query) {
+        if (!query || query.length < 2) {
+            document.getElementById('quickSearchResults').innerHTML = '';
+            return;
+        },
+        
+        const results = [];
+        const searchTerm = query.toLowerCase();
+        
+        // Search through all services
+        Object.entries(this.vaultData.services || {}).forEach(([serviceId, variables]) => {
+            const service = this.servicesConfig.services.find(s => s.id === serviceId);
+            const serviceName = service ? service.name : serviceId;
+            
+            Object.entries(variables).forEach(([key, value]) => {
+                if (key.toLowerCase().includes(searchTerm) || 
+                    (value && value.toString().toLowerCase().includes(searchTerm))) {
+                    results.push({
+                        serviceId,
+                        serviceName,
+                        key,
+                        value: value ? value.toString() : '',
+                        isSecret: this.isSecretVariable(key)
+                    });
+                }
+            });
+        });
+        
+        // Also search variable definitions from config
+        if (this.servicesConfig.services) {
+            this.servicesConfig.services.forEach(service => {
+                if (service.variables) {
+                    service.variables.forEach(variable => {
+                        if (variable.key.toLowerCase().includes(searchTerm) ||
+                            (variable.description && variable.description.toLowerCase().includes(searchTerm))) {
+                            // Check if not already in results
+                            const exists = results.find(r => 
+                                r.serviceId === service.id && r.key === variable.key
+                            );
+                            if (!exists) {
+                                const currentValue = this.vaultData.services[service.id]?.[variable.key] || '';
+                                results.push({
+                                    serviceId: service.id,
+                                    serviceName: service.name,
+                                    key: variable.key,
+                                    value: currentValue,
+                                    isSecret: variable.type === 'secret' || variable.sensitive,
+                                    description: variable.description
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+        }
+        
+        this.renderSearchResults(results, query);
+    },
+    
+    // Check if variable is secret
+    isSecretVariable(key) {
+        const secretPatterns = ['TOKEN', 'SECRET', 'PASSWORD', 'KEY', 'PRIVATE'];
+        return secretPatterns.some(pattern => key.toUpperCase().includes(pattern));
+    },
+    
+    // Render search results
+    renderSearchResults(results, query) {
+        const container = document.getElementById('quickSearchResults');
+        
+        if (results.length === 0) {
+            container.innerHTML = '<div class="search-no-results">No variables found</div>';
+            return;
+        }
+        
+        // Group by service
+        const grouped = results.reduce((acc, result) => {
+            if (!acc[result.serviceId]) acc[result.serviceId] = [];
+            acc[result.serviceId].push(result);
+            return acc;
+        }, {});
+        
+        let html = '';
+        Object.entries(grouped).forEach(([serviceId, variables]) => {
+            const service = this.servicesConfig.services.find(s => s.id === serviceId);
+            html += `
+                <div class="search-service-group">
+                    <div class="search-service-header">${service?.name || serviceId}</div>
+                    ${variables.map((v, index) => `
+                        <div class="search-result-item" 
+                             data-service-id="${v.serviceId}" 
+                             data-variable="${v.key}"
+                             tabindex="0">
+                            <div class="search-result-key">${this.highlightMatch(v.key, query)}</div>
+                            <div class="search-result-value">
+                                ${v.isSecret ? '••••••••' : this.truncateValue(v.value)}
+                            </div>
+                            ${v.description ? `<div class="search-result-desc">${v.description}</div>` : ''}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        });
+        
+        container.innerHTML = html;
+        
+        // Add click handlers
+        container.querySelectorAll('.search-result-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const serviceId = item.dataset.serviceId;
+                const variable = item.dataset.variable;
+                this.selectSearchResult(serviceId, variable);
+            });
+        });
+        
+        // Select first item
+        const firstItem = container.querySelector('.search-result-item');
+        if (firstItem) firstItem.classList.add('selected');
+    },
+    
+    // Highlight matching text
+    highlightMatch(text, query) {
+        if (!query) return text;
+        const regex = new RegExp(`(${query})`, 'gi');
+        return text.replace(regex, '<mark>$1</mark>');
+    },
+    
+    // Truncate long values
+    truncateValue(value, maxLength = 50) {
+        if (!value) return '';
+        if (value.length <= maxLength) return value;
+        return value.substring(0, maxLength) + '...';
+    },
+    
+    // Handle keyboard navigation in search
+    handleSearchNavigation(e) {
+        const results = document.querySelectorAll('.search-result-item');
+        if (results.length === 0) return;
+        
+        const current = document.querySelector('.search-result-item.selected');
+        let currentIndex = current ? Array.from(results).indexOf(current) : -1;
+        
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            currentIndex = (currentIndex + 1) % results.length;
+            this.selectSearchItem(results[currentIndex]);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            currentIndex = currentIndex <= 0 ? results.length - 1 : currentIndex - 1;
+            this.selectSearchItem(results[currentIndex]);
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (current) {
+                const serviceId = current.dataset.serviceId;
+                const variable = current.dataset.variable;
+                this.selectSearchResult(serviceId, variable);
+            }
+        }
+    },
+    
+    // Select search item
+    selectSearchItem(item) {
+        document.querySelectorAll('.search-result-item').forEach(el => {
+            el.classList.remove('selected');
+        });
+        item.classList.add('selected');
+        item.scrollIntoView({ block: 'nearest' });
+    },
+    
+    // Select search result - navigate to service and highlight variable
+    selectSearchResult(serviceId, variableKey) {
+        this.closeQuickSearch();
+        this.selectService(serviceId);
+        
+        // Highlight the variable after service loads
+        setTimeout(() => {
+            const inputs = document.querySelectorAll('.variable-card input');
+            inputs.forEach(input => {
+                const label = input.closest('.variable-card')?.querySelector('label');
+                if (label && label.textContent === variableKey) {
+                    input.focus();
+                    input.select();
+                    input.closest('.variable-card').classList.add('highlighted');
+                    setTimeout(() => {
+                        input.closest('.variable-card').classList.remove('highlighted');
+                    }, 2000);
+                }
+            });
+        }, 100);
     }
 };
 

@@ -17,6 +17,10 @@ COPY vault-services.json /usr/share/nginx/html/
 # Copy JavaScript files
 COPY js/vault-core.js /usr/share/nginx/html/js/
 COPY js/vault-ui.js /usr/share/nginx/html/js/
+COPY js/vault-health.js /usr/share/nginx/html/js/
+COPY js/vault-discord.js /usr/share/nginx/html/js/
+COPY js/vault-backup.js /usr/share/nginx/html/js/
+COPY js/vault-railway-sync.js /usr/share/nginx/html/js/
 
 # Copy CSS files
 COPY css/vault.css /usr/share/nginx/html/css/

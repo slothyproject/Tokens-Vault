@@ -645,13 +645,51 @@ const VaultUI = {
         modal.classList.add('hidden');
     },
     
-    // Perform search
+    // Search filters
+    searchFilters: {
+        type: 'all',      // 'all' | 'shared' | 'secrets' | 'urls' | 'ports' | etc.
+        service: 'all',   // 'all' | specific service
+        date: 'all'       // 'all' | 'today' | 'week' | 'month'
+    },
+
+    // Perform search with filters
     performQuickSearch(query) {
         if (!query || query.length < 2) {
             document.getElementById('quickSearchResults').innerHTML = '';
             return;
-        },
+        }
         
+        let results = this.searchVariables(query);
+        
+        // Apply filters
+        if (this.searchFilters.type !== 'all') {
+            results = results.filter(r => {
+                const type = VaultIntelligence?.detectType(r.key, r.value) || 'text';
+                return type === this.searchFilters.type;
+            });
+        }
+        
+        if (this.searchFilters.service !== 'all') {
+            results = results.filter(r => r.serviceId === this.searchFilters.service);
+        }
+        
+        // Sort results
+        results.sort((a, b) => {
+            // Exact matches first
+            const aExact = a.key.toLowerCase() === query.toLowerCase();
+            const bExact = b.key.toLowerCase() === query.toLowerCase();
+            if (aExact && !bExact) return -1;
+            if (bExact && !aExact) return 1;
+            
+            // Then by service name
+            return a.serviceName.localeCompare(b.serviceName);
+        });
+        
+        this.renderSearchResults(results, query);
+    },
+    
+    // Core search function
+    searchVariables(query) {
         const results = [];
         const searchTerm = query.toLowerCase();
         
@@ -668,39 +706,31 @@ const VaultUI = {
                         serviceName,
                         key,
                         value: value ? value.toString() : '',
-                        isSecret: this.isSecretVariable(key)
+                        isSecret: this.isSecretVariable(key),
+                        type: VaultIntelligence?.detectType(key, value) || 'text'
                     });
                 }
             });
         });
         
-        // Also search variable definitions from config
-        if (this.servicesConfig.services) {
-            this.servicesConfig.services.forEach(service => {
-                if (service.variables) {
-                    service.variables.forEach(variable => {
-                        if (variable.key.toLowerCase().includes(searchTerm) ||
-                            (variable.description && variable.description.toLowerCase().includes(searchTerm))) {
-                            // Check if not already in results
-                            const exists = results.find(r => 
-                                r.serviceId === service.id && r.key === variable.key
-                            );
-                            if (!exists) {
-                                const currentValue = this.vaultData.services[service.id]?.[variable.key] || '';
-                                results.push({
-                                    serviceId: service.id,
-                                    serviceName: service.name,
-                                    key: variable.key,
-                                    value: currentValue,
-                                    isSecret: variable.type === 'secret' || variable.sensitive,
-                                    description: variable.description
-                                });
-                            }
-                        }
-                    });
-                }
-            });
-        }
+        // Search shared variables
+        Object.entries(this.vaultData.shared || {}).forEach(([key, value]) => {
+            if (key.toLowerCase().includes(searchTerm) || 
+                (value && value.toString().toLowerCase().includes(searchTerm))) {
+                results.push({
+                    serviceId: 'shared',
+                    serviceName: 'Shared Variables',
+                    key,
+                    value: value ? value.toString() : '',
+                    isSecret: this.isSecretVariable(key),
+                    type: VaultIntelligence?.detectType(key, value) || 'text',
+                    isShared: true
+                });
+            }
+        });
+        
+        return results;
+    },
         
         this.renderSearchResults(results, query);
     },

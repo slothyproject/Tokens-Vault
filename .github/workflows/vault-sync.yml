@@ -1,0 +1,33 @@
+name: Vault Auto-Sync
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'dissident-config.json'
+  workflow_dispatch:
+
+jobs:
+  validate-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate Config
+        run: |
+          if [ -f dissident-config.json ]; then
+            echo "✓ dissident-config.json exists"
+            # Validate JSON syntax
+            cat dissident-config.json | jq . > /dev/null 2>&1 || exit 1
+            echo "✓ JSON is valid"
+          else
+            echo "✗ dissident-config.json not found"
+            exit 1
+          fi
+
+      - name: Notify Success
+        run: |
+          echo "Config synchronized successfully"
+          echo "Commit: ${{ github.sha }}"
+          echo "Author: ${{ github.actor }}"

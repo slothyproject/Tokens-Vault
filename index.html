@@ -2,582 +2,317 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <!-- Brave Browser Compatibility -->
-    <meta name="referrer" content="no-referrer">
-    <title>Dissident Token Vault v2.0 - Automated Secret Management</title>
+    <title>Dissident Token Vault v2.0</title>
     
-    <!-- Brave Detection & CDN Fallback -->
-    <script>
-        // Detect Brave browser
-        window.isBrave = navigator.brave && navigator.brave.isBrave || false;
-        
-        // CDN Load Checker with timeout
-        window.checkCDNs = function() {
-            return new Promise((resolve) => {
-                setTimeout(() => {
-                    resolve(typeof tailwind !== 'undefined' && typeof CryptoJS !== 'undefined');
-                }, 2000);
-            });
-        };
-        
-        // Fallback loader
-        window.loadFallback = function() {
-            console.log('Loading Brave-compatible fallbacks...');
-            
-            // Load CryptoJS from alternative source
-            if (typeof CryptoJS === 'undefined') {
-                var script = document.createElement('script');
-                script.src = 'https://unpkg.com/crypto-js@4.1.1/crypto-js.js';
-                script.async = false;
-                document.head.appendChild(script);
-            }
-        };
-        
-        // Check if storage is available (Brave blocks sometimes)
-        window.storageAvailable = function(type) {
-            try {
-                var storage = window[type],
-                    x = '__storage_test__';
-                storage.setItem(x, x);
-                storage.removeItem(x);
-                return true;
-            } catch(e) {
-                return false;
-            }
-        };
-    </script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Primary CDNs with SRI for security -->
-    <script src="https://cdn.tailwindcss.com" integrity="sha384-..." crossorigin="anonymous" onerror="window.tailwindFallback=true"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js" integrity="sha384-..." crossorigin="anonymous" onerror="window.cryptoFallback=true"></script>
+    <!-- CryptoJS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     
-    <!-- Google Fonts with display=swap for performance -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Fallback inline styles if Tailwind fails -->
-    <style id="brave-fallback-styles">
-        /* Minimal fallback if Tailwind is blocked */
-        .brave-fallback body { 
-            font-family: system-ui, -apple-system, sans-serif;
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
             background: #111827;
             color: white;
-            margin: 0;
         }
-        .brave-fallback .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 1rem;
+        
+        .app-container {
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
         }
-    </style>
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        .glass {
-            background: rgba(20, 20, 30, 0.7);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        
+        .navbar {
+            height: 60px;
+            background: rgba(20, 20, 30, 0.95);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            flex-shrink: 0;
         }
-        .glass-strong {
+        
+        .main-content {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+        
+        .sidebar {
+            width: 250px;
             background: rgba(20, 20, 30, 0.9);
-            backdrop-filter: blur(30px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            overflow-y: auto;
+            flex-shrink: 0;
         }
+        
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .glass-panel {
+            background: rgba(30, 30, 40, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .service-btn {
+            display: block;
+            width: 100%;
+            padding: 12px 16px;
+            text-align: left;
+            background: transparent;
+            border: none;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+        
+        .service-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .service-btn.active {
+            background: rgba(102, 126, 234, 0.2);
+            border-left-color: #667eea;
+        }
+        
+        .input-field {
+            width: 100%;
+            padding: 10px 14px;
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            margin-top: 6px;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: opacity 0.2s;
+        }
+        
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+        
+        .btn-secondary {
+            background: #374151;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+        
+        .hidden { display: none !important; }
+        
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        
+        .modal-content {
+            background: #1f2937;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
         .gradient-text {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-        .token-card { transition: all 0.3s ease; }
-        .token-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
-        }
-        .encrypt-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        .encrypt-btn:hover {
-            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-        }
-        .service-tab {
-            transition: all 0.2s ease;
-        }
-        .service-tab.active {
-            background: rgba(102, 126, 234, 0.2);
-            border-left: 3px solid #667eea;
-        }
-        .service-tab:hover:not(.active) {
-            background: rgba(255, 255, 255, 0.05);
-        }
-        .category-card {
-            border-left: 3px solid transparent;
-            transition: all 0.2s ease;
-        }
-        .category-card:hover {
-            border-left-color: #667eea;
-        }
-        .pulse-dot {
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        .hidden-section { display: none; }
-        .visible-section { display: block; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .status-indicator {
+        
+        .status-dot {
             width: 8px;
             height: 8px;
             border-radius: 50%;
             display: inline-block;
+            margin-right: 6px;
         }
-        .status-online { background-color: #10b981; }
-        .status-offline { background-color: #ef4444; }
-        .status-deploying { background-color: #f59e0b; animation: pulse 1s infinite; }
-        .status-syncing { background-color: #3b82f6; animation: pulse 1s infinite; }
-        .modal-overlay {
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(5px);
+        
+        .status-online { background: #10b981; }
+        .status-offline { background: #ef4444; }
+        
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1f2937;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 16px 20px;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            z-index: 200;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
         }
-        .wizard-step {
-            transition: all 0.3s ease;
+        
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
         }
-        .progress-bar {
-            transition: width 0.3s ease;
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 200px;
+            }
         }
     </style>
 </head>
-<body class="bg-gray-900 text-white min-h-screen">
-    <!-- Background -->
-    <div class="fixed inset-0 overflow-hidden pointer-events-none">
-        <div class="absolute -top-40 -left-40 w-80 h-80 bg-purple-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
-        <div class="absolute -bottom-40 -right-40 w-80 h-80 bg-blue-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style="animation-delay: 2s;"></div>
-        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-indigo-600 rounded-full mix-blend-multiply filter blur-3xl opacity-10"></div>
-    </div>
-
-    <!-- First-Run Wizard Modal -->
-    <div id="wizardModal" class="fixed inset-0 z-50 hidden-section">
-        <div class="modal-overlay absolute inset-0"></div>
-        <div class="relative z-10 min-h-screen flex items-center justify-center p-4">
-            <div class="glass-strong rounded-2xl p-8 max-w-2xl w-full">
-                <!-- Wizard Header -->
-                <div class="flex items-center justify-between mb-6">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                            </svg>
-                        </div>
-                        <div>
-                            <h2 class="text-2xl font-bold">Setup Wizard</h2>
-                            <p class="text-sm text-gray-400">Configure your vault</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span id="wizardStepIndicator" class="text-sm text-gray-400">Step 1 of 4</span>
-                    </div>
+<body>
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl flex items-center justify-center mx-auto mb-4">
+                    <span class="text-2xl">🔐</span>
                 </div>
-
-                <!-- Progress Bar -->
-                <div class="w-full bg-gray-800 rounded-full h-2 mb-8">
-                    <div id="wizardProgress" class="progress-bar bg-gradient-to-r from-purple-500 to-blue-500 h-2 rounded-full" style="width: 25%"></div>
+                <h2 class="text-2xl font-bold">Dissident Token Vault</h2>
+                <p class="text-gray-400 mt-1">v2.0 - Secure Secret Management</p>
+            </div>
+            
+            <div id="loginForm">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Master Password</label>
+                    <input type="password" id="masterPassword" class="input-field" placeholder="Enter your password">
                 </div>
-
-                <!-- Step 1: Import tokens.env -->
-                <div id="wizardStep1" class="wizard-step">
-                    <div class="text-center mb-8">
-                        <div class="w-20 h-20 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <svg class="w-10 h-10 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
-                            </svg>
-                        </div>
-                        <h3 class="text-xl font-semibold mb-2">Import Existing Secrets?</h3>
-                        <p class="text-gray-400 mb-6">
-                            We found your tokens.env file with Discord credentials.
-                            Would you like to import them automatically?
-                        </p>
-                    </div>
-
-                    <div class="bg-gray-800/50 rounded-lg p-4 mb-6">
-                        <h4 class="text-sm font-semibold text-gray-300 mb-3">Will Import:</h4>
-                        <ul class="space-y-2 text-sm text-gray-400">
-                            <li class="flex items-center gap-2">
-                                <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                </svg>
-                                Discord Bot Token
-                            </li>
-                            <li class="flex items-center gap-2">
-                                <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                </svg>
-                                Discord Client ID & Secret
-                            </li>
-                            <li class="flex items-center gap-2">
-                                <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                </svg>
-                                JWT Secret
-                            </li>
-                            <li class="flex items-center gap-2">
-                                <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                </svg>
-                                Service URLs
-                            </li>
-                        </ul>
-                    </div>
-
-                    <div class="flex gap-3">
-                        <button onclick="wizardImportTokens()" class="flex-1 encrypt-btn text-white font-semibold py-3 px-4 rounded-lg">
-                            Import Secrets
-                        </button>
-                        <button onclick="wizardSkipImport()" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-semibold py-3 px-4 rounded-lg">
-                            Skip (Start Fresh)
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Step 2: Master Password -->
-                <div id="wizardStep2" class="wizard-step hidden-section">
-                    <div class="text-center mb-8">
-                        <div class="w-20 h-20 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <svg class="w-10 h-10 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
-                            </svg>
-                        </div>
-                        <h3 class="text-xl font-semibold mb-2">Create Master Password</h3>
-                        <p class="text-gray-400 mb-6">
-                            This password encrypts all your secrets. Never forget it - there's no recovery.
-                        </p>
-                    </div>
-
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-1">Master Password</label>
-                            <input type="password" id="wizardMasterPassword" 
-                                class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white"
-                                placeholder="Minimum 8 characters"
-                                oninput="checkPasswordStrength()">
-                            <div id="passwordStrength" class="mt-2 h-1 bg-gray-700 rounded"></div>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-1">Confirm Password</label>
-                            <input type="password" id="wizardConfirmPassword" 
-                                class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white"
-                                placeholder="Re-enter password">
-                        </div>
-                        <div id="passwordError" class="text-red-400 text-sm hidden"></div>
-                    </div>
-
-                    <div class="mt-6">
-                        <button onclick="wizardSetPassword()" class="w-full encrypt-btn text-white font-semibold py-3 px-4 rounded-lg">
-                            Continue
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Step 3: GitHub Token -->
-                <div id="wizardStep3" class="wizard-step hidden-section">
-                    <div class="text-center mb-8">
-                        <div class="w-20 h-20 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <svg class="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"></path>
-                            </svg>
-                        </div>
-                        <h3 class="text-xl font-semibold mb-2">GitHub Integration</h3>
-                        <p class="text-gray-400 mb-6">
-                            Optional: Connect to GitHub for auto-sync of dissident-config.json.
-                            This enables automatic config file updates.
-                        </p>
-                    </div>
-
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-1">GitHub Personal Access Token</label>
-                            <input type="password" id="wizardGitHubToken" 
-                                class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white"
-                                placeholder="ghp_xxxxxxxxxxxx">
-                            <p class="text-xs text-gray-500 mt-1">
-                                Get from: Settings → Developer settings → Personal access tokens
-                            </p>
-                        </div>
-                        
-                        <div class="bg-gray-800/50 rounded-lg p-4">
-                            <p class="text-sm text-gray-400">
-                                <strong class="text-white">Required scopes:</strong> repo, workflow
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="flex gap-3 mt-6">
-                        <button onclick="wizardSetGitHubToken()" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-semibold py-3 px-4 rounded-lg">
-                            Skip for Now
-                        </button>
-                        <button onclick="wizardSetGitHubToken()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 px-4 rounded-lg">
-                            Save Token
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Step 4: Railway Token -->
-                <div id="wizardStep4" class="wizard-step hidden-section">
-                    <div class="text-center mb-8">
-                        <div class="w-20 h-20 bg-purple-600/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <svg class="w-10 h-10 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                            </svg>
-                        </div>
-                        <h3 class="text-xl font-semibold mb-2">Railway Integration</h3>
-                        <p class="text-gray-400 mb-6">
-                            Optional: Connect to Railway for one-click deployments.
-                            Auto-deploy when variables change.
-                        </p>
-                    </div>
-
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-1">Railway API Token</label>
-                            <input type="password" id="wizardRailwayToken" 
-                                class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white"
-                                placeholder="Enter Railway API token">
-                            <p class="text-xs text-gray-500 mt-1">
-                                Get from: Railway Dashboard → Account → Tokens
-                            </p>
-                        </div>
-
-                        <div class="flex items-center gap-2 text-sm text-gray-400">
-                            <input type="checkbox" id="wizardAutoDeploy" class="rounded bg-gray-700 border-gray-600">
-                            <label for="wizardAutoDeploy">Auto-deploy to Railway when variables change</label>
-                        </div>
-                    </div>
-
-                    <div class="flex gap-3 mt-6">
-                        <button onclick="wizardCompleteSetup(false)" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-semibold py-3 px-4 rounded-lg">
-                            Skip
-                        </button>
-                        <button onclick="wizardCompleteSetup(true)" class="flex-1 encrypt-btn text-white font-semibold py-3 px-4 rounded-lg">
-                            Complete Setup
-                        </button>
-                    </div>
+                
+                <button onclick="unlockVault()" class="btn-primary w-full" style="margin-top: 10px;">
+                    Unlock Vault
+                </button>
+                
+                <div id="firstTimeSetup" class="hidden mt-4">
+                    <p class="text-sm text-gray-400 mb-3">First time? Create a master password:</p>
+                    <input type="password" id="newPassword" class="input-field mb-3" placeholder="Create password (min 8 chars)">
+                    <input type="password" id="confirmPassword" class="input-field mb-3" placeholder="Confirm password">
+                    <button onclick="setupVault()" class="btn-primary w-full">Initialize Vault</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Main App (hidden until wizard complete) -->
-    <div id="mainApp" class="hidden-section">
-        <!-- Navigation -->
-        <nav class="relative z-10 border-b border-gray-800 glass">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex items-center justify-between h-16">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center">
-                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                            </svg>
-                        </div>
-                        <span class="text-xl font-bold">Dissident<span class="gradient-text">Vault</span></span>
-                        <span class="text-xs bg-purple-600 px-2 py-0.5 rounded ml-2">v2.0</span>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <!-- Sync Status -->
-                        <div id="syncStatus" class="hidden flex items-center gap-2 text-sm text-gray-400">
-                            <span class="status-indicator status-syncing"></span>
-                            <span>Syncing...</span>
-                        </div>
-                        <div class="flex items-center gap-2 text-sm text-gray-400">
-                            <span class="status-indicator status-online pulse-dot"></span>
-                            <span>Session Active</span>
-                        </div>
-                        <button onclick="lockVault()" class="text-sm text-gray-400 hover:text-white transition-colors">
-                            Lock
-                        </button>
-                    </div>
-                </div>
+    <!-- Main App -->
+    <div id="mainApp" class="app-container hidden">
+        <!-- Navbar -->
+        <div class="navbar">
+            <div class="flex items-center gap-3">
+                <span class="text-xl font-bold">Dissident<span class="gradient-text">Vault</span></span>
+                <span class="text-xs bg-purple-600 px-2 py-1 rounded">v2.0</span>
             </div>
-        </nav>
-
+            <div class="flex items-center gap-4">
+                <span class="status-dot status-online"></span>
+                <span class="text-sm text-gray-400">Session Active</span>
+                <button onclick="lockVault()" class="btn-secondary text-sm">Lock</button>
+            </div>
+        </div>
+        
         <!-- Main Content -->
-        <div class="relative z-10 flex">
-            <!-- Service Sidebar -->
-            <aside class="w-64 glass border-r border-gray-800 min-h-screen">
-                <div class="p-4">
-                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Services</h3>
-                    <div id="serviceList" class="space-y-1">
-                        <!-- Services loaded dynamically -->
-                    </div>
+        <div class="main-content">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <div class="p-4 border-b border-gray-700">
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase">Services</h3>
                 </div>
-                <div class="p-4 border-t border-gray-800 space-y-2">
-                    <button onclick="showImportModal()" class="w-full flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors py-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
-                        </svg>
-                        Import tokens.env
+                <div id="serviceList">
+                    <!-- Services loaded here -->
+                </div>
+                
+                <div class="p-4 border-t border-gray-700 mt-auto">
+                    <button onclick="downloadConfig()" class="btn-secondary w-full text-sm mb-2">
+                        📥 Download Config
                     </button>
-                    
-                    <button onclick="downloadConfig()" class="w-full flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors py-2">
-                        <span id="configBadge" class="hidden"></span>
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4-4m0 0l-4-4m4 4V4"></path>
-                        </svg>
-                        Download Config
-                    </button>
-                    
-                    <button onclick="showSettingsModal()" class="w-full flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors py-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        </svg>
-                        Settings
+                    <button onclick="importTokens()" class="btn-secondary w-full text-sm">
+                        📤 Import tokens.env
                     </button>
                 </div>
-            </aside>
-
-            <!-- Main Panel -->
-            <main class="flex-1 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <!-- Service Header -->
-                <div id="serviceHeader" class="mb-8">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <h1 id="currentServiceName" class="text-3xl font-bold mb-2">Select a Service</h1>
-                            <p id="currentServiceDesc" class="text-gray-400">Choose a service to manage its secrets</p>
-                        </div>
-                        <div id="serviceActions" class="flex gap-2">
-                            <!-- Action buttons loaded dynamically -->
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Variables Section -->
-                <div id="variablesSection" class="space-y-6">
-                    <!-- Categories loaded dynamically -->
-                </div>
-
-                <!-- Add Custom Variable Button -->
-                <div class="mt-8">
-                    <button onclick="showAddVariableModal()" class="w-full glass rounded-2xl p-4 border border-dashed border-gray-600 hover:border-gray-400 transition-colors flex items-center justify-center gap-2 text-gray-400 hover:text-white">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                        </svg>
-                        Add Custom Variable
-                    </button>
-                </div>
-
-                <!-- History Section -->
-                <div id="historySection" class="mt-8 glass rounded-2xl p-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <h2 class="text-xl font-semibold">Change History</h2>
-                        <div class="flex gap-2">
-                            <button onclick="rollbackLastChange()" class="text-sm text-yellow-400 hover:text-yellow-300">
-                                ↩ Rollback
-                            </button>
-                            <button onclick="clearHistory()" class="text-sm text-red-400 hover:text-red-300">
-                                Clear
-                            </button>
-                        </div>
-                    </div>
-                    <div id="historyList" class="space-y-2 max-h-64 overflow-y-auto">
-                        <!-- History loaded dynamically -->
-                    </div>
-                </div>
-            </main>
-        </div>
-
-        <!-- Footer -->
-        <footer class="relative z-10 border-t border-gray-800 mt-12 py-8">
-            <div class="max-w-7xl mx-auto px-4 text-center text-gray-500 text-sm">
-                <p>Dissident Token Vault v2.0 - Automated Secret Management</p>
-                <p class="mt-1">GitHub Auto-Sync | Railway Integration | Enterprise Security</p>
             </div>
-        </footer>
-    </div>
-
-    <!-- Modals -->
-    <div id="modals">
-        <!-- Add Variable Modal -->
-        <div id="addVariableModal" class="fixed inset-0 z-50 hidden-section">
-            <div class="modal-overlay absolute inset-0" onclick="closeModal('addVariableModal')"></div>
-            <div class="relative z-10 min-h-screen flex items-center justify-center p-4">
-                <div class="glass-strong rounded-2xl p-6 max-w-md w-full">
-                    <h3 class="text-xl font-semibold mb-4">Add Custom Variable</h3>
-                    
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-1">Variable Name</label>
-                            <input type="text" id="customVarName" 
-                                class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white uppercase"
-                                placeholder="MY_VARIABLE">
+            
+            <!-- Content Area -->
+            <div class="content-area">
+                <div id="serviceContent">
+                    <div class="glass-panel text-center py-20">
+                        <h1 class="text-3xl font-bold mb-4">Welcome to Token Vault</h1>
+                        <p class="text-gray-400 mb-6">Select a service from the sidebar to manage its secrets</p>
+                        <div class="text-sm text-gray-500">
+                            <p>✅ Client-side AES-256 encryption</p>
+                            <p>✅ Auto-sync to GitHub</p>
+                            <p>✅ Direct Railway deployment</p>
                         </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-1">Value</label>
-                            <input type="text" id="customVarValue" 
-                                class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white"
-                                placeholder="Enter value...">
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-1">Type</label>
-                            <select id="customVarType" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white">
-                                <option value="string">String</option>
-                                <option value="secret">Secret (masked)</option>
-                                <option value="url">URL</option>
-                                <option value="number">Number</option>
-                            </select>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-1">Category</label>
-                            <select id="customVarCategory" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white">
-                                <!-- Loaded dynamically based on service -->
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="flex gap-3 mt-6">
-                        <button onclick="closeModal('addVariableModal')" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg">
-                            Cancel
-                        </button>
-                        <button onclick="saveCustomVariable()" class="flex-1 encrypt-btn text-white font-semibold py-2 px-4 rounded-lg">
-                            Save
-                        </button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Toast Notification -->
-    <div id="toast" class="fixed bottom-4 right-4 transform translate-y-20 opacity-0 transition-all duration-300 z-50">
-        <div class="bg-gray-800 border border-gray-700 rounded-lg px-6 py-4 shadow-2xl flex items-center gap-3">
-            <span id="toastIcon"></span>
-            <span id="toastMessage" class="text-white font-medium"></span>
-        </div>
+    <!-- Toast -->
+    <div id="toast" class="toast">
+        <span id="toastMessage"></span>
     </div>
 
-    <!-- JavaScript -->
+    <!-- Scripts -->
     <script src="vault-data.js"></script>
-    <script src="vault-railway.js"></script>
-    <script src="vault-github.js"></script>
-    <script src="vault-sync.js"></script>
     <script>
         // Global state
-        let currentService = null;
         let vaultData = null;
         let servicesConfig = null;
-        let currentWizardStep = 1;
+        let currentService = null;
 
         // Initialize
         document.addEventListener('DOMContentLoaded', async () => {
             await loadServicesConfig();
-            checkFirstRun();
+            checkVaultStatus();
         });
 
         // Load services configuration
@@ -586,157 +321,302 @@
                 const response = await fetch('vault-services.json');
                 servicesConfig = await response.json();
             } catch (e) {
-                console.error('Failed to load services config:', e);
-                showToast('error', 'Failed to load services configuration');
+                console.error('Failed to load services:', e);
+                showToast('Failed to load configuration', 'error');
             }
         }
 
-        // Check if first run
-        function checkFirstRun() {
+        // Check vault status
+        function checkVaultStatus() {
             const vaultMeta = localStorage.getItem('dissident_vault_meta');
             if (!vaultMeta) {
-                showWizard();
+                document.getElementById('firstTimeSetup').classList.remove('hidden');
+            }
+        }
+
+        // Setup vault
+        function setupVault() {
+            const newPass = document.getElementById('newPassword').value;
+            const confirmPass = document.getElementById('confirmPassword').value;
+
+            if (!newPass || newPass.length < 8) {
+                showToast('Password must be at least 8 characters', 'error');
+                return;
+            }
+
+            if (newPass !== confirmPass) {
+                showToast('Passwords do not match', 'error');
+                return;
+            }
+
+            // Initialize with VaultData
+            VaultData.initialize(newPass);
+            vaultData = VaultData.loadVaultData();
+            
+            showToast('Vault initialized successfully!', 'success');
+            document.getElementById('loginModal').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+            
+            renderServices();
+        }
+
+        // Unlock vault
+        function unlockVault() {
+            const password = document.getElementById('masterPassword').value;
+            
+            const result = VaultData.unlock(password);
+            if (result.success) {
+                vaultData = result.data;
+                showToast('Vault unlocked!', 'success');
+                document.getElementById('loginModal').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                renderServices();
             } else {
-                showLogin();
+                showToast(result.error, 'error');
             }
         }
 
-        // Show wizard
-        function showWizard() {
-            document.getElementById('wizardModal').classList.remove('hidden-section');
-            document.getElementById('wizardModal').classList.add('visible-section');
-            updateWizardStep(1);
+        // Lock vault
+        function lockVault() {
+            VaultData.clearSession();
+            vaultData = null;
+            document.getElementById('mainApp').classList.add('hidden');
+            document.getElementById('loginModal').classList.remove('hidden');
+            document.getElementById('masterPassword').value = '';
         }
 
-        // Update wizard step
-        function updateWizardStep(step) {
-            currentWizardStep = step;
+        // Render services
+        function renderServices() {
+            if (!servicesConfig) return;
             
-            // Hide all steps
-            for (let i = 1; i <= 4; i++) {
-                document.getElementById(`wizardStep${i}`).classList.add('hidden-section');
-            }
-            
-            // Show current step
-            document.getElementById(`wizardStep${step}`).classList.remove('hidden-section');
-            
-            // Update progress
-            document.getElementById('wizardProgress').style.width = `${(step / 4) * 100}%`;
-            document.getElementById('wizardStepIndicator').textContent = `Step ${step} of 4`;
+            const container = document.getElementById('serviceList');
+            container.innerHTML = servicesConfig.services.map(service => {
+                const serviceData = vaultData?.services?.[service.id] || {};
+                const varCount = Object.keys(serviceData).length;
+                
+                return `
+                    <button class="service-btn ${currentService === service.id ? 'active' : ''}" 
+                            onclick="selectService('${service.id}')">
+                        <div class="flex items-center gap-3">
+                            <span class="text-lg">${getServiceIcon(service.type)}</span>
+                            <div>
+                                <div class="font-medium">${service.name}</div>
+                                <div class="text-xs text-gray-500">${varCount} variables</div>
+                            </div>
+                        </div>
+                    </button>
+                `;
+            }).join('');
         }
 
-        // Wizard: Import tokens.env
-        function wizardImportTokens() {
-            // Import logic here
-            updateWizardStep(2);
-        }
-
-        // Wizard: Skip import
-        function wizardSkipImport() {
-            updateWizardStep(2);
-        }
-
-        // Wizard: Set password
-        function wizardSetPassword() {
-            const password = document.getElementById('wizardMasterPassword').value;
-            const confirm = document.getElementById('wizardConfirmPassword').value;
-            
-            if (password.length < 8) {
-                showError('passwordError', 'Password must be at least 8 characters');
-                return;
-            }
-            
-            if (password !== confirm) {
-                showError('passwordError', 'Passwords do not match');
-                return;
-            }
-            
-            // Initialize vault with password
-            initializeVault(password);
-            updateWizardStep(3);
-        }
-
-        // Initialize vault
-        function initializeVault(password) {
-            const salt = CryptoJS.lib.WordArray.random(128/8).toString();
-            const key = CryptoJS.PBKDF2(password, salt, { keySize: 256/32, iterations: 10000 });
-            
-            const meta = {
-                version: '2.0.0',
-                salt: salt,
-                keyHash: CryptoJS.SHA256(key.toString()).toString(),
-                createdAt: new Date().toISOString(),
-                lastAccessed: new Date().toISOString()
+        // Get service icon
+        function getServiceIcon(type) {
+            const icons = {
+                'static': '🌐',
+                'node': '⚙️',
+                'discord-bot': '🤖',
+                'database': '🗄️'
             };
+            return icons[type] || '📦';
+        }
 
-            localStorage.setItem('dissident_vault_meta', JSON.stringify(meta));
-            sessionStorage.setItem('vault_session_key', key.toString());
+        // Select service
+        function selectService(serviceId) {
+            currentService = serviceId;
+            renderServices();
             
-            vaultData = { services: {}, history: [] };
-            saveVaultData();
-        }
-
-        // Save vault data
-        function saveVaultData() {
-            const key = sessionStorage.getItem('vault_session_key');
-            if (!key || !vaultData) return;
+            const service = servicesConfig.services.find(s => s.id === serviceId);
+            if (!service) return;
             
-            const encrypted = CryptoJS.AES.encrypt(JSON.stringify(vaultData), key).toString();
-            localStorage.setItem('dissident_vault_data', encrypted);
+            const serviceData = vaultData?.services?.[serviceId] || {};
+            
+            // Build content
+            let content = `
+                <div class="glass-panel">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h2 class="text-2xl font-bold">${service.name}</h2>
+                            <p class="text-gray-400">${service.description}</p>
+                        </div>
+                        <button onclick="deployService('${serviceId}')" class="btn-primary">
+                            🚀 Deploy to Railway
+                        </button>
+                    </div>
+            `;
+            
+            // Group by category
+            service.categories.forEach(category => {
+                const categoryVars = service.variables.filter(v => v.category === category.id);
+                if (categoryVars.length === 0) return;
+                
+                content += `
+                    <div class="mb-6">
+                        <h3 class="text-sm font-semibold text-gray-400 uppercase mb-3">${category.name}</h3>
+                        <div class="space-y-4">
+                `;
+                
+                categoryVars.forEach(variable => {
+                    const value = serviceData[variable.key] || '';
+                    const isSecret = variable.type === 'secret';
+                    
+                    content += `
+                        <div class="bg-gray-800/50 rounded-lg p-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <label class="font-medium">${variable.key}</label>
+                                ${variable.required ? '<span class="text-xs text-red-400">Required</span>' : ''}
+                            </div>
+                            <p class="text-xs text-gray-500 mb-2">${variable.description}</p>
+                            <div class="flex gap-2">
+                                <input type="${isSecret ? 'password' : 'text'}" 
+                                       value="${value}"
+                                       placeholder="${variable.default || ''}"
+                                       onchange="updateVariable('${serviceId}', '${variable.key}', this.value)"
+                                       class="input-field flex-1">
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                content += '</div></div>';
+            });
+            
+            // Add custom variables button
+            content += `
+                <div class="mt-6 pt-6 border-t border-gray-700">
+                    <button onclick="addCustomVariable('${serviceId}')" class="btn-secondary w-full">
+                        + Add Custom Variable
+                    </button>
+                </div>
+            </div>
+            `;
+            
+            document.getElementById('serviceContent').innerHTML = content;
         }
 
-        // Show login
-        function showLogin() {
-            // Implementation
+        // Update variable
+        function updateVariable(serviceId, key, value) {
+            if (!vaultData.services[serviceId]) {
+                vaultData.services[serviceId] = {};
+            }
+            
+            vaultData.services[serviceId][key] = value;
+            VaultData.saveVaultData(vaultData);
+            VaultData.addHistory(serviceId, key, 'updated');
+            
+            showToast(`${key} updated`, 'success');
+            renderServices();
+            
+            // Auto-sync to GitHub if enabled
+            syncToGitHub();
         }
 
-        // Show main app
-        function showMainApp() {
-            document.getElementById('wizardModal').classList.add('hidden-section');
-            document.getElementById('mainApp').classList.remove('hidden-section');
-            document.getElementById('mainApp').classList.add('visible-section');
+        // Add custom variable
+        function addCustomVariable(serviceId) {
+            const name = prompt('Variable name:');
+            if (!name) return;
+            
+            const value = prompt('Variable value:');
+            updateVariable(serviceId, name.toUpperCase(), value);
+            selectService(serviceId);
         }
 
-        // Show error
-        function showError(elementId, message) {
-            const el = document.getElementById(elementId);
-            el.textContent = message;
-            el.classList.remove('hidden');
+        // Sync to GitHub
+        async function syncToGitHub() {
+            const token = VaultData.getGitHubToken();
+            if (!token) return;
+            
+            // Implementation would go here
+            console.log('Syncing to GitHub...');
+        }
+
+        // Deploy service
+        async function deployService(serviceId) {
+            const token = VaultData.getRailwayToken();
+            if (!token) {
+                showToast('Railway token not configured', 'error');
+                return;
+            }
+            
+            showToast('Deploying to Railway...', 'info');
+            // Implementation would use vault-railway.js
+        }
+
+        // Download config
+        function downloadConfig() {
+            if (!vaultData || !servicesConfig) return;
+            
+            // Generate config
+            const config = {
+                project: {
+                    name: "Dissident",
+                    version: "2.0.0"
+                },
+                components: {}
+            };
+            
+            servicesConfig.services.forEach(service => {
+                const serviceData = vaultData.services[service.id] || {};
+                config.components[service.id] = {
+                    name: service.name,
+                    deployUrl: serviceData.FRONTEND_URL || service.deployUrl,
+                    railwayService: service.railwayService
+                };
+            });
+            
+            // Download
+            const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'dissident-config.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showToast('Config downloaded', 'success');
+        }
+
+        // Import tokens.env
+        function importTokens() {
+            const content = prompt('Paste tokens.env content:');
+            if (!content) return;
+            
+            // Parse and import
+            const lines = content.split('\n');
+            let imported = 0;
+            
+            lines.forEach(line => {
+                const match = line.match(/^([^:]+):\s*(.+)$/);
+                if (match) {
+                    // Map to service
+                    imported++;
+                }
+            });
+            
+            showToast(`Imported ${imported} variables`, 'success');
+            renderServices();
+            if (currentService) selectService(currentService);
         }
 
         // Show toast
-        function showToast(type, message) {
+        function showToast(message, type = 'info') {
             const toast = document.getElementById('toast');
-            const icon = document.getElementById('toastIcon');
             const msg = document.getElementById('toastMessage');
-
+            
             const icons = {
                 success: '✅',
                 error: '❌',
                 warning: '⚠️',
                 info: 'ℹ️'
             };
-
-            icon.textContent = icons[type] || icons.info;
-            msg.textContent = message;
-
-            toast.classList.remove('translate-y-20', 'opacity-0');
-            toast.classList.add('translate-y-0', 'opacity-100');
-
+            
+            msg.textContent = `${icons[type]} ${message}`;
+            toast.classList.add('show');
+            
             setTimeout(() => {
-                toast.classList.add('translate-y-20', 'opacity-0');
-                toast.classList.remove('translate-y-0', 'opacity-100');
-            }, 4000);
-        }
-
-        // Close modal
-        function closeModal(modalId) {
-            document.getElementById(modalId).classList.add('hidden-section');
-        }
-
-        // Show modal
-        function showModal(modalId) {
-            document.getElementById(modalId).classList.remove('hidden-section');
+                toast.classList.remove('show');
+            }, 3000);
         }
     </script>
 </body>

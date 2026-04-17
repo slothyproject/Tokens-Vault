@@ -204,6 +204,9 @@ const VaultUI = {
                         <button class="btn-secondary" onclick="VaultUI.showSharedVariables()">
                             🔗 Manage Shared Variables
                         </button>
+                        <button class="btn-secondary" onclick="VaultUI.viewLogs('${serviceId}')" title="View Live Logs">
+                            📋 View Logs
+                        </button>
                         <button class="btn-primary" onclick="VaultUI.deployService('${serviceId}')">
                             🚀 Deploy to Railway
                         </button>
@@ -481,6 +484,25 @@ const VaultUI = {
     },
 
     async deployService(serviceId) {
+        // Use new Railway deployment module
+        if (typeof VaultRailwayDeploy !== 'undefined') {
+            const result = await VaultRailwayDeploy.deployService(serviceId);
+            if (result.success) {
+                // Auto-start log stream if deployment successful
+                setTimeout(() => {
+                    if (typeof VaultLogs !== 'undefined') {
+                        VaultLogs.startStream(serviceId);
+                    }
+                }, 2000);
+            }
+        } else {
+            // Fallback to old implementation
+            await this.deployServiceLegacy(serviceId);
+        }
+    },
+
+    // Legacy deployment for backward compatibility
+    async deployServiceLegacy(serviceId) {
         const token = this.vaultData?.railwayToken;
         if (!token) {
             this.showToast('Railway token not configured', 'error');
@@ -551,6 +573,15 @@ const VaultUI = {
             console.error('Deployment failed:', e);
             this.showToast('Deployment failed: ' + e.message, 'error');
             VaultCore.addHistory(serviceId, 'deploy', 'failed: ' + e.message);
+        }
+    },
+
+    // View logs for a service
+    viewLogs(serviceId) {
+        if (typeof VaultLogs !== 'undefined') {
+            VaultLogs.startStream(serviceId);
+        } else {
+            this.showToast('Log viewer not available', 'error');
         }
     },
 

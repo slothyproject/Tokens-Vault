@@ -328,7 +328,7 @@ const VaultCore = {
             const salt = CryptoJS.lib.WordArray.random(128/8).toString();
             const key = CryptoJS.PBKDF2(password, salt, { 
                 keySize: 256/32, 
-                iterations: 10000 
+                iterations: 100000  // Increased from 10000 for better security
             }).toString();
             const keyHash = CryptoJS.SHA256(key).toString();
 

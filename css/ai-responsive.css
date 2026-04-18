@@ -1,0 +1,420 @@
+/**
+ * ai-responsive.css - Responsive Design System
+ * Mobile-first approach with breakpoints
+ * 
+ * @version 4.1
+ */
+
+/* ============================================
+   BREAKPOINTS
+   Mobile First: Base styles for mobile
+   Tablet: 768px+
+   Desktop: 1024px+
+   Large: 1440px+
+   ============================================ */
+
+/* ============================================
+   BASE (Mobile First)
+   ============================================ */
+
+.ai-mobile-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    border-top: 1px solid var(--glass-border);
+    padding: var(--space-sm);
+    z-index: 1000;
+    justify-content: space-around;
+}
+
+.ai-mobile-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--space-xs) var(--space-sm);
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.75rem;
+    transition: color var(--transition-fast);
+}
+
+.ai-mobile-nav-item.active {
+    color: var(--color-primary);
+}
+
+.ai-mobile-nav-item svg,
+.ai-mobile-nav-item .icon {
+    width: 24px;
+    height: 24px;
+    margin-bottom: 2px;
+}
+
+/* Hide desktop sidebar on mobile */
+.ai-sidebar {
+    display: none;
+}
+
+/* Mobile service cards */
+.service-card-modern {
+    margin: var(--space-sm);
+}
+
+/* Mobile notification panel */
+.ai-notification-panel {
+    width: 100%;
+    max-width: none;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    top: auto;
+    max-height: 70vh;
+}
+
+/* Touch-friendly buttons */
+.btn-modern,
+.btn-action,
+.glass-button {
+    min-height: 44px;
+    min-width: 44px;
+}
+
+/* Mobile form inputs */
+.input-modern {
+    font-size: 16px; /* Prevents zoom on iOS */
+    padding: var(--space-md);
+}
+
+/* Mobile tables */
+.ai-table-mobile {
+    display: block;
+}
+
+.ai-table-mobile thead {
+    display: none;
+}
+
+.ai-table-mobile tbody,
+.ai-table-mobile tr {
+    display: block;
+}
+
+.ai-table-mobile td {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--space-sm);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.ai-table-mobile td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+/* Mobile modals */
+.modal-content {
+    width: 95%;
+    margin: var(--space-sm);
+    max-height: 90vh;
+}
+
+/* Mobile chat widget */
+.ai-chat-widget {
+    right: var(--space-sm);
+    left: var(--space-sm);
+    width: auto;
+}
+
+/* ============================================
+   TABLET (768px+)
+   ============================================ */
+
+@media (min-width: 768px) {
+    .ai-mobile-nav {
+        display: none;
+    }
+    
+    .ai-sidebar {
+        display: flex;
+        width: 240px;
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+    }
+    
+    .ai-main-content {
+        margin-left: 240px;
+    }
+    
+    /* Grid layouts */
+    .service-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--space-md);
+    }
+    
+    .metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    /* Notification panel */
+    .ai-notification-panel {
+        width: 400px;
+        right: var(--space-md);
+        left: auto;
+        top: 80px;
+        bottom: auto;
+        border-radius: var(--radius-lg);
+        max-height: 600px;
+    }
+    
+    /* Show tables normally */
+    .ai-table-mobile {
+        display: table;
+    }
+    
+    .ai-table-mobile thead {
+        display: table-header-group;
+    }
+    
+    .ai-table-mobile tbody {
+        display: table-row-group;
+    }
+    
+    .ai-table-mobile tr {
+        display: table-row;
+    }
+    
+    .ai-table-mobile td {
+        display: table-cell;
+    }
+    
+    .ai-table-mobile td::before {
+        display: none;
+    }
+}
+
+/* ============================================
+   DESKTOP (1024px+)
+   ============================================ */
+
+@media (min-width: 1024px) {
+    .ai-sidebar {
+        width: 280px;
+    }
+    
+    .ai-main-content {
+        margin-left: 280px;
+    }
+    
+    /* Larger grids */
+    .service-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .metrics-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    /* Dashboard layout */
+    .dashboard-layout {
+        display: grid;
+        grid-template-columns: 1fr 350px;
+        gap: var(--space-lg);
+    }
+    
+    /* Chat widget */
+    .ai-chat-widget {
+        width: 380px;
+        right: var(--space-lg);
+        left: auto;
+    }
+}
+
+/* ============================================
+   LARGE SCREENS (1440px+)
+   ============================================ */
+
+@media (min-width: 1440px) {
+    .ai-sidebar {
+        width: 320px;
+    }
+    
+    .ai-main-content {
+        margin-left: 320px;
+        max-width: 1400px;
+    }
+    
+    .service-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+/* ============================================
+   ORIENTATION SPECIFIC
+   ============================================ */
+
+/* Landscape on mobile */
+@media (max-width: 767px) and (orientation: landscape) {
+    .ai-notification-panel {
+        max-height: 50vh;
+    }
+    
+    .modal-content {
+        max-height: 80vh;
+    }
+}
+
+/* ============================================
+   ACCESSIBILITY
+   ============================================ */
+
+/* Focus styles */
+@media (pointer: fine) {
+    /* Desktop: Show focus only on keyboard */
+    *:focus:not(:focus-visible) {
+        outline: none;
+    }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    
+    .service-card-modern:hover,
+    .glass-button:hover {
+        transform: none;
+    }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+    :root {
+        --glass-bg: rgba(0, 0, 0, 0.9);
+        --glass-border: rgba(255, 255, 255, 0.5);
+        --border-color: rgba(255, 255, 255, 0.3);
+    }
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+
+@media print {
+    .ai-mobile-nav,
+    .ai-sidebar,
+    .theme-toggle,
+    .ai-notification-panel,
+    .ai-chat-widget {
+        display: none !important;
+    }
+    
+    .ai-main-content {
+        margin-left: 0 !important;
+    }
+    
+    .service-card-modern {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+}
+
+/* ============================================
+   SAFE AREA (Notch devices)
+   ============================================ */
+
+@supports (padding-top: env(safe-area-inset-top)) {
+    .ai-mobile-nav {
+        padding-bottom: calc(var(--space-sm) + env(safe-area-inset-bottom));
+    }
+    
+    .ai-notification-panel {
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+.hide-mobile {
+    display: none;
+}
+
+.hide-desktop {
+    display: block;
+}
+
+@media (min-width: 768px) {
+    .hide-mobile {
+        display: block;
+    }
+    
+    .hide-desktop {
+        display: none;
+    }
+}
+
+/* Touch target sizing */
+.touch-target {
+    min-height: 44px;
+    min-width: 44px;
+}
+
+/* Scrollable areas */
+.scroll-x {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.scroll-y {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Stack on mobile */
+.stack-mobile {
+    display: flex;
+    flex-direction: column;
+}
+
+@media (min-width: 768px) {
+    .stack-mobile {
+        flex-direction: row;
+    }
+}
+
+/* Full width on mobile */
+.full-width-mobile {
+    width: 100%;
+}
+
+@media (min-width: 768px) {
+    .full-width-mobile {
+        width: auto;
+    }
+}
+
+/* Sticky positioning */
+.sticky-mobile {
+    position: sticky;
+    top: 0;
+}
+
+@media (min-width: 768px) {
+    .sticky-mobile {
+        position: static;
+    }
+}

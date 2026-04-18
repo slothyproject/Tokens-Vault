@@ -13,10 +13,11 @@
 const OllamaCloudIntegration = {
     // Configuration
     config: {
-        baseUrl: localStorage.getItem('ollama_cloud_url') || 'https://ollama-cloud.reddgr.com',
+        // Use backend proxy - no API key needed in browser
+        baseUrl: '/api/ollama',
         defaultModel: localStorage.getItem('ollama_default_model') || 'llama3.2:latest',
         fallbackModel: 'phi4-mini:latest',
-        timeout: 30000,
+        timeout: 60000,
         maxRetries: 2,
         temperature: 0.7,
         contextWindow: 4096
@@ -222,10 +223,10 @@ Respond in JSON format:
         localStorage.setItem('ollama_cloud_config', JSON.stringify(this.config));
     },
     
-    // Test connection to Ollama Cloud
+    // Test connection to Ollama Cloud (via backend proxy)
     async testConnection() {
         try {
-            const response = await fetch(`${this.config.baseUrl}/api/tags`, {
+            const response = await fetch('/api/ollama/tags', {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -243,13 +244,13 @@ Respond in JSON format:
         return false;
     },
     
-    // Generate AI completion
+    // Generate AI completion (via backend proxy)
     async generateCompletion(prompt, options = {}) {
         const model = options.model || this.config.defaultModel;
         const temperature = options.temperature || this.config.temperature;
         
         try {
-            const response = await fetch(`${this.config.baseUrl}/api/generate`, {
+            const response = await fetch('/api/ollama/generate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

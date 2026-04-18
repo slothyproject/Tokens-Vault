@@ -1,31 +1,27 @@
-# Dissident Token Vault - Secure Secret Management
-FROM nginx:alpine
+# Dissident Token Vault with Ollama Proxy
+FROM node:18-alpine
 
-# Create directories
-RUN mkdir -p /usr/share/nginx/html/js /usr/share/nginx/html/css
+# Create app directory
+WORKDIR /app
 
-# Copy main HTML files
-COPY index.html /usr/share/nginx/html/
-COPY login.html /usr/share/nginx/html/
-COPY vault.html /usr/share/nginx/html/
-COPY minimal.html /usr/share/nginx/html/
+# Copy package files
+COPY package*.json ./
 
-# Copy config files
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY vault-services.json /usr/share/nginx/html/
+# Install dependencies
+RUN npm ci --only=production
 
-# Copy JavaScript files
-COPY js/*.js /usr/share/nginx/html/js/
+# Copy all files
+COPY . .
 
-# Copy CSS files
-COPY css/*.css /usr/share/nginx/html/css/
+# Create .env file if not exists (Railway will override with env vars)
+RUN if [ ! -f .env ]; then cp .env.example .env; fi
 
-# Expose port 8080
+# Expose port
 EXPOSE 8080
 
-# Healthcheck - check nginx is responding
+# Health check
 HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=5 \
-    CMD wget --quiet --tries=1 --spider http://localhost:8080/ || exit 1
+    CMD wget --quiet --tries=1 --spider http://localhost:8080/api/health || exit 1
 
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Start server
+CMD ["node", "server.js"]

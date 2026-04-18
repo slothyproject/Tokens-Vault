@@ -77,6 +77,22 @@ const ollamaLimiter = rateLimit({
 app.use('/api/', apiLimiter);
 app.use('/api/ollama/', ollamaLimiter);
 
+// Import database and routes
+const { initDatabase } = require('./database/database');
+const authRoutes = require('./routes/auth');
+
+// Initialize database on startup
+initDatabase().then(connected => {
+    if (connected) {
+        console.log('✅ Database initialized successfully');
+    } else {
+        console.warn('⚠️ Database not connected - using fallback storage');
+    }
+});
+
+// Mount auth routes
+app.use('/api/auth', authRoutes);
+
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true }));
 
@@ -378,22 +394,17 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, () => {
     console.log('╔══════════════════════════════════════════════════╗');
-    console.log('║   🤖 Dissident Token Vault with Ollama AI       ║');
+    console.log('║   🔧 Central Hub - Railway Management Platform   ║');
     console.log('╚══════════════════════════════════════════════════╝');
     console.log(`\nServer running on port ${PORT}`);
     console.log(`Health check: http://localhost:${PORT}/api/health`);
+    console.log(`Auth API: http://localhost:${PORT}/api/auth`);
     
     if (OLLAMA_API_KEY) {
         console.log('\n✅ Ollama AI: CONFIGURED');
         console.log(`   Base URL: ${OLLAMA_BASE_URL}`);
-        console.log('   Endpoints:');
-        console.log('     - GET  /api/ollama/tags      (List models)');
-        console.log('     - POST /api/ollama/generate  (Generate text)');
-        console.log('     - POST /api/ollama/chat      (Chat completion)');
     } else {
         console.log('\n⚠️  Ollama AI: NOT CONFIGURED');
-        console.log('   Set OLLAMA_API_KEY environment variable to enable AI features');
-        console.log('   Get your key at: https://ollama.com/settings/keys');
     }
     
     console.log('\n✨ Ready for connections!\n');

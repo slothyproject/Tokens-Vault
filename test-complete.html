@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Central Hub - System Test</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            background: #0f0f23;
+            color: #fff;
+            padding: 40px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 { color: #667eea; }
+        .test-section {
+            background: rgba(255,255,255,0.05);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .pass { color: #22c55e; }
+        .fail { color: #ef4444; }
+        .warn { color: #f59e0b; }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #764ba2; }
+        #results {
+            margin-top: 20px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Central Hub - System Test</h1>
+    <p>Comprehensive test of all systems</p>
+
+    <div class="test-section">
+        <h2>Quick Actions</h2>
+        <button onclick="runAllTests()">Run All Tests</button>
+        <button onclick="window.location.href='vault.html'">Go to Vault</button>
+        <button onclick="window.location.href='login.html'">Go to Login</button>
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+        function log(msg, type = 'info') {
+            const results = document.getElementById('results');
+            const color = type === 'pass' ? '#22c55e' : type === 'fail' ? '#ef4444' : type === 'warn' ? '#f59e0b' : '#fff';
+            results.innerHTML += `<span style="color: ${color}">${msg}</span>\n`;
+        }
+
+        async function runAllTests() {
+            document.getElementById('results').innerHTML = '';
+            log('=== Central Hub System Test ===\n');
+
+            // Test 1: Basic libraries
+            log('Test 1: Core Libraries', 'info');
+            if (typeof CryptoJS !== 'undefined') {
+                log('  ✅ CryptoJS loaded', 'pass');
+            } else {
+                log('  ❌ CryptoJS not found', 'fail');
+            }
+
+            // Test 2: VaultCore
+            log('\nTest 2: VaultCore', 'info');
+            if (typeof VaultCore !== 'undefined') {
+                log('  ✅ VaultCore loaded', 'pass');
+                if (VaultCore.loadVaultData) {
+                    log('  ✅ VaultCore.loadVaultData available', 'pass');
+                }
+            } else {
+                log('  ❌ VaultCore not found', 'fail');
+            }
+
+            // Test 3: VaultUI
+            log('\nTest 3: VaultUI', 'info');
+            if (typeof VaultUI !== 'undefined') {
+                log('  ✅ VaultUI loaded', 'pass');
+            } else {
+                log('  ❌ VaultUI not found', 'fail');
+            }
+
+            // Test 4: Ollama
+            log('\nTest 4: Ollama Integration', 'info');
+            if (typeof OllamaCloudIntegration !== 'undefined') {
+                log('  ✅ OllamaCloudIntegration loaded', 'pass');
+                log(`  📊 Model: ${OllamaCloudIntegration.config?.defaultModel || 'Not set'}`, 'info');
+                log(`  🔌 Connected: ${OllamaCloudIntegration.state?.connected || false}`, 'info');
+            } else {
+                log('  ⚠️ OllamaCloudIntegration not loaded (optional)', 'warn');
+            }
+
+            // Test 5: Storage
+            log('\nTest 5: Storage System', 'info');
+            try {
+                localStorage.setItem('_test_', '1');
+                localStorage.removeItem('_test_');
+                log('  ✅ localStorage working', 'pass');
+            } catch (e) {
+                log('  ❌ localStorage not available', 'fail');
+            }
+
+            // Test 6: Session
+            log('\nTest 6: Session Status', 'info');
+            if (VaultCore && VaultCore.getSessionKey) {
+                const hasSession = VaultCore.getSessionKey();
+                log(`  🔑 Session active: ${!!hasSession}`, hasSession ? 'pass' : 'warn');
+            }
+
+            // Test 7: Auto-heal
+            log('\nTest 7: Auto-Heal System', 'info');
+            if (typeof AutoHealSystem !== 'undefined') {
+                log('  ✅ AutoHealSystem loaded', 'pass');
+            } else {
+                log('  ⚠️ AutoHealSystem not loaded', 'warn');
+            }
+
+            log('\n=== Test Complete ===');
+        }
+
+        // Auto-run on load
+        window.addEventListener('load', runAllTests);
+    </script>
+</body>
+</html>

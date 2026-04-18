@@ -262,6 +262,81 @@ class WebSocketServer {
   }
 
   /**
+   * Add client
+   */
+  addClient(clientId, ws, user) {
+    this.clients.set(clientId, {
+      ws,
+      userId: user.userId,
+      subscriptions: new Set(),
+      isAlive: true
+    });
+  }
+
+  /**
+   * Remove client
+   */
+  removeClient(clientId) {
+    const client = this.clients.get(clientId);
+    if (client) {
+      client.ws.close();
+      this.clients.delete(clientId);
+    }
+  }
+
+  /**
+   * Subscribe client to channel
+   */
+  subscribe(clientId, subscriptionKey) {
+    const client = this.clients.get(clientId);
+    if (client) {
+      client.subscriptions.add(subscriptionKey);
+    }
+  }
+
+  /**
+   * Unsubscribe client from channel
+   */
+  unsubscribe(clientId, subscriptionKey) {
+    const client = this.clients.get(clientId);
+    if (client) {
+      client.subscriptions.delete(subscriptionKey);
+    }
+  }
+
+  /**
+   * Parse message
+   */
+  parseMessage(data) {
+    try {
+      return JSON.parse(data);
+    } catch (err) {
+      return null;
+    }
+  }
+
+  /**
+   * Broadcast deployment update
+   */
+  broadcastDeploymentUpdate(deploymentData) {
+    this.broadcast(deploymentData.serviceId, 'deployment', deploymentData);
+  }
+
+  /**
+   * Broadcast health status
+   */
+  broadcastHealthStatus(healthData) {
+    this.broadcast(healthData.serviceId, 'health', healthData);
+  }
+
+  /**
+   * Broadcast service logs
+   */
+  broadcastServiceLogs(serviceId, logs) {
+    this.broadcast(serviceId, 'logs', { serviceId, logs });
+  }
+
+  /**
    * Start heartbeat to detect dead connections
    */
   startHeartbeat() {

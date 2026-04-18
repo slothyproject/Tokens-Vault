@@ -82,6 +82,7 @@ const { initDatabase } = require('./database/database');
 const authRoutes = require('./routes/auth');
 const serviceRoutes = require('./routes/services');
 const aiRoutes = require('./routes/ai');
+const { swaggerUi, specs } = require('./config/swagger');
 
 // Initialize database on startup
 initDatabase().then(connected => {
@@ -91,6 +92,13 @@ initDatabase().then(connected => {
         console.warn('⚠️ Database not connected - using fallback storage');
     }
 });
+
+// Swagger API Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
+    explorer: true,
+    customCss: '.swagger-ui .topbar { display: none }',
+    customSiteTitle: 'Central Hub API Documentation'
+}));
 
 // Mount routes
 app.use('/api/auth', authRoutes);

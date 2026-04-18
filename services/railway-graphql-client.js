@@ -498,6 +498,21 @@ class RailwayGraphQLClient {
   // ============================================
 
   /**
+   * Validate token format
+   */
+  isValidTokenFormat(token, type = 'generic') {
+    if (!token || typeof token !== 'string') return false;
+    
+    // Railway tokens start with 'railway_' or 'raily_'
+    if (type === 'railway') {
+      return token.startsWith('raily_') && token.length >= 32;
+    }
+    
+    // Generic token validation - must be at least 8 chars
+    return token.length >= 8;
+  }
+
+  /**
    * Validate API token
    */
   async validateToken() {

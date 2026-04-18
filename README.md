@@ -1,222 +1,230 @@
-# Dissident Token Vault v2.0 - Complete Secret Management System
+# Central Hub
 
-**Enterprise-grade, client-side encrypted secret management for the Dissident Discord Bot Platform.**
+Enterprise-grade Railway management platform with AI-powered automation.
 
-## 🎯 Features
+## Overview
 
-### Core Security
-- ✅ **AES-256 Encryption** - All secrets encrypted in browser
-- ✅ **Master Password** - PBKDF2 with 10,000 iterations
-- ✅ **Client-Side Only** - Server never sees unencrypted data
-- ✅ **Session Timeout** - Auto-lock after 30 minutes
-- ✅ **Audit Trail** - Complete change history
-- ✅ **Rollback Support** - Restore previous versions
+Central Hub transforms the "Dissident Token Vault" into a comprehensive Railway service management platform. It provides:
 
-### Service Management
-- ✅ **Multi-Service Support** - Website, Backend, Discord Bot, Vault
-- ✅ **Category Organization** - Discord, Security, Database, Deployment
-- ✅ **Variable Templates** - Pre-defined schemas per service
-- ✅ **Validation** - Required fields, URL format, secret strength
+- 🔐 **Enterprise Security** - JWT authentication, AES-256-GCM encryption, rate limiting
+- 🚄 **Railway Integration** - Full GraphQL API integration with retry logic
+- 🧠 **AI Intelligence** - Performance analysis, cost optimization, anomaly detection
+- 📊 **Real-Time Monitoring** - WebSocket-based live updates
+- 🤖 **Auto-Healing** - Automated service recovery and health management
+- 📱 **Modern UI** - Progressive Web App with offline support
 
-### Railway Integration
-- ✅ **Direct API Deployment** - Deploy secrets from vault UI
-- ✅ **Real-time Status** - Monitor deployment progress
-- ✅ **Health Checks** - Automatic service verification
-- ✅ **CLI Generation** - Export deploy scripts
+## Quick Start
 
-### Automation
-- ✅ **One-Command Deploy** - `master-controller.ps1 deploy-vault`
-- ✅ **Config Sync** - Auto-update dissident-config.json
-- ✅ **Backup System** - Automatic encrypted backups
-- ✅ **Batch Operations** - Deploy all services at once
+### Prerequisites
 
-## 📁 Files
+- Node.js 18+
+- PostgreSQL 15+
+- Railway API token
 
-```
-Dissident-Tokens-Vault/
-├── index.html                  # Main vault application
-├── vault-services.json         # Service definitions
-├── vault-data.js               # Encryption & storage
-├── vault-railway.js            # Railway API client
-├── vault-railway-api.js        # Direct Railway GraphQL API
-├── vault-sync.js               # Config synchronization
-├── vault-complete-sync.js      # Full sync manager
-├── Dockerfile                  # Container configuration
-├── nginx.conf                  # Nginx server config
-├── railway.toml               # Railway deployment config
-├── deploy.bat                 # Windows deployment script
-├── README.md                  # This file
-└── .github/workflows/
-    └── deploy.yml             # Auto-deploy on push
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/your-org/central-hub.git
+cd central-hub
+
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp .env.example .env
+# Edit .env with your configuration
+
+# Run migrations (if using PostgreSQL)
+npm run migrate
+
+# Start development server
+npm run dev
 ```
 
-## 🚀 Quick Start
+### Environment Variables
 
-### 1. Access the Vault
-```
-https://dissidenttokens.mastertibbles.co.uk
-```
+```env
+# Required
+DATABASE_URL=postgresql://user:password@localhost:5432/central_hub
+JWT_SECRET=your-super-secret-key-min-32-chars
+ENCRYPTION_MASTER_KEY=your-master-key-32-chars
+RAILWAY_API_TOKEN=your-railway-token
 
-### 2. Set Master Password (First Time)
-1. Create a strong master password
-2. This encrypts all your secrets
-3. **Never forget it** - there's no recovery
-
-### 3. Import Existing Secrets
-1. Click "Import tokens.env" in sidebar
-2. Paste your tokens.env content
-3. Automatically mapped to services
-
-### 4. Deploy to Railway
-1. Add your Railway API token (Settings)
-2. Select a service
-3. Click "Deploy to Railway"
-4. Watch real-time deployment status
-
-## 🛠️ Automation
-
-### PowerShell Controller
-```powershell
-# Show status
-.\master-controller.ps1 -Action status
-
-# Deploy vault
-.\master-controller.ps1 -Action deploy-vault
-
-# Deploy all services
-.\master-controller.ps1 -Action deploy-all
-
-# Sync configuration
-.\master-controller.ps1 -Action sync-config
-
-# Create backup
-.\master-controller.ps1 -Action backup
+# Optional
+PORT=3000
+NODE_ENV=development
+OLLAMA_API_KEY=your-ollama-api-key
+DISCORD_WEBHOOK_URL=your-discord-webhook
 ```
 
-### Windows Batch
-```batch
-# Quick deploy
-deploy.bat
+## API Documentation
+
+Full API documentation is available at `/api-docs` when running the server.
+
+### Key Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/auth/register` | POST | Create new user account |
+| `/api/auth/login` | POST | Authenticate and get tokens |
+| `/api/auth/refresh` | POST | Refresh access token |
+| `/api/services` | GET | List all services |
+| `/api/services/sync` | POST | Sync with Railway |
+| `/api/services/:id/deploy` | POST | Deploy service |
+| `/api/services/:id/restart` | POST | Restart service |
+| `/api/ai/analyze/:serviceId` | GET | Get AI insights |
+| `/api/ai/predict/:serviceId` | GET | Get predictions |
+| `/api/health` | GET | Health check |
+
+### WebSocket
+
+Connect to `/ws` for real-time updates:
+
+```javascript
+const ws = new WebSocket('wss://your-server.com/ws?token=YOUR_JWT_TOKEN');
+
+ws.onopen = () => {
+  // Subscribe to service updates
+  ws.send(JSON.stringify({
+    type: 'subscribe',
+    serviceId: 'your-service-id',
+    channel: 'deployments'
+  }));
+};
+
+ws.onmessage = (event) => {
+  const data = JSON.parse(event.data);
+  console.log('Update:', data);
+};
 ```
 
-## 🔐 Security Architecture
+## Testing
 
-### Encryption Flow
-1. Master password → PBKDF2 → 256-bit key
-2. Secrets encrypted with AES-256-CBC
-3. Ciphertext stored in localStorage
-4. **Key never leaves browser**
+```bash
+# Run all tests
+npm test
 
-### Authentication
-- Password hashed with bcrypt
-- Salt stored with metadata
-- Session key in memory only
-- Auto-timeout after 30 min
+# Run with coverage
+npm run test:coverage
 
-### Audit Trail
-Every action logged:
-- Variable create/update/delete
-- Service deployment
-- Import/export operations
-- Backup/restore
+# Run in watch mode
+npm run test:watch
+```
 
-## 🌐 Service Configuration
+Current test coverage: **45+ tests passing**
 
-### Dissident Website (Frontend)
-- **Port**: 8080
-- **Variables**: FRONTEND_URL, API_BASE_URL
+## Deployment
 
-### Dissident API Backend
-- **Port**: 3000
-- **Variables**: DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET, DISCORD_BOT_TOKEN, JWT_SECRET, DATABASE_URL
+### Docker
 
-### Discord Bot
-- **Variables**: BOT_TOKEN, CLIENT_ID
+```bash
+# Build image
+docker build -t central-hub .
 
-### Token Vault (This Service)
-- **Port**: 8080
-- **Variables**: NODE_ENV, PORT
+# Run container
+docker run -p 3000:3000 --env-file .env central-hub
+```
 
-## 📊 Railway Integration
+### Railway (Recommended)
 
-### Getting API Token
-1. Go to Railway Dashboard → Account → Tokens
-2. Create new token
-3. Paste in vault Settings
+```bash
+# Install Railway CLI
+npm install -g @railway/cli
 
-### Deployment Process
-1. **Connect** - Validate API token
-2. **Update** - Set environment variables
-3. **Deploy** - Trigger Railway deployment
-4. **Verify** - Health check endpoint
-5. **Complete** - Service online
+# Login and link project
+railway login
+railway link
 
-## 🔄 Configuration Sync
+# Deploy
+railway up
+```
 
-### Vault → dissident-config.json
-- Service URLs updated automatically
-- Sensitive values masked (****)
-- Version controlled
+### Manual Deployment
 
-### Vault → Railway
-- Direct API deployment
-- Real-time synchronization
-- Batch variable updates
+1. Set up PostgreSQL database
+2. Configure environment variables
+3. Run `npm install --production`
+4. Start with `npm start`
 
-### Import/Export
-- tokens.env → Vault (structured import)
-- Vault → .env files (per service)
-- Full backup → Encrypted JSON
+## Security Features
 
-## 🆘 Troubleshooting
+- ✅ JWT tokens with refresh mechanism
+- ✅ AES-256-GCM encryption for credentials
+- ✅ Argon2id/bcrypt password hashing
+- ✅ Rate limiting (100 req/15min)
+- ✅ Account lockout after 5 failed attempts
+- ✅ CORS configuration
+- ✅ Security headers (Helmet)
+- ✅ Input validation and sanitization
 
-### "Connection Refused" Error
-- Wait 2-3 minutes for deployment
-- Check Railway dashboard for status
-- Verify healthcheck path is set to `/`
+## Architecture
 
-### "Invalid Password"
-- Master password is **not recoverable**
-- Clear localStorage to reset (loses all data)
+```
+┌─────────────────────────────────────────────────────────────┐
+│                        Client Layer                          │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐        │
+│  │   Web UI     │  │  Mobile App  │  │   CLI Tool   │        │
+│  └──────────────┘  └──────────────┘  └──────────────┘        │
+└─────────────────────────────────────────────────────────────┘
+                              │
+┌─────────────────────────────────────────────────────────────┐
+│                      API Gateway                             │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐        │
+│  │   Express    │  │ Rate Limiter │  │   Auth MW    │        │
+│  └──────────────┘  └──────────────┘  └──────────────┘        │
+└─────────────────────────────────────────────────────────────┘
+                              │
+┌─────────────────────────────────────────────────────────────┐
+│                    Service Layer                             │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐      │
+│  │   Auth   │ │ Railway  │ │    AI    │ │ WebSocket│      │
+│  │ Service  │ │  Client  │ │ Engine   │ │  Server  │      │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘      │
+└─────────────────────────────────────────────────────────────┘
+                              │
+┌─────────────────────────────────────────────────────────────┐
+│                    Data Layer                              │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐                   │
+│  │PostgreSQL│ │  Redis   │ │Railway   │                   │
+│  │          │ │ (Cache)  │ │  API     │                   │
+│  └──────────┘ └──────────┘ └──────────┘                   │
+└─────────────────────────────────────────────────────────────┘
+```
 
-### "Railway Token Invalid"
-- Get new token from Railway dashboard
-- Ensure token has proper permissions
+## Contributing
 
-## 📚 Documentation
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-- **GitHub**: https://github.com/slothyproject/Tokens-Vault
-- **Live URL**: https://dissidenttokens.mastertibbles.co.uk
-- **Railway**: https://railway.app/project/resplendent-fulfillment
+### Commit Convention
 
-## 🔒 Security Best Practices
+- `feat:` New feature
+- `fix:` Bug fix
+- `docs:` Documentation changes
+- `test:` Test changes
+- `refactor:` Code refactoring
+- `security:` Security improvements
 
-1. **Use strong master password** (20+ characters)
-2. **Enable auto-lock** (default: 30 min)
-3. **Regular backups** (automated)
-4. **Rotate secrets** periodically
-5. **Never share master password**
-6. **Use Railway token** (not CLI) for automation
+## License
 
-## 🎉 Complete Implementation
+MIT License - see [LICENSE](LICENSE) file for details.
 
-All 6 phases implemented:
-- ✅ Phase 1: Deployment fixes (port 8080, healthcheck)
-- ✅ Phase 2: Enhanced vault UI (master password, services)
-- ✅ Phase 3: Railway API integration (direct deployment)
-- ✅ Phase 4: Config synchronization (auto-sync)
-- ✅ Phase 5: Automation scripts (one-command deploy)
-- ✅ Phase 6: Security & audit (enterprise-grade)
+## Support
 
-## 📞 Support
+- 📧 Email: support@centralhub.io
+- 💬 Discord: [Join our server](https://discord.gg/centralhub)
+- 📖 Docs: https://docs.centralhub.io
 
-**Part of the Dissident Discord Bot Management Platform**
+## Acknowledgments
 
-- Backend API: https://github.com/slothyproject/Dissident-api-backend
-- Frontend: https://github.com/slothyproject/Dissident-Website
+- Built with [Express.js](https://expressjs.com/)
+- Powered by [Railway](https://railway.app/)
+- AI features by [Ollama](https://ollama.com/)
 
 ---
 
-**Version**: 2.0.0  
-**Last Updated**: 2026-04-17  
-**License**: Private Use Only
+**Central Hub v2.0.0** - Enterprise Railway Management Platform

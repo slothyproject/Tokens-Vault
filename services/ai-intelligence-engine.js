@@ -566,6 +566,33 @@ class AIIntelligenceEngine {
     
     return cached;
   }
+  /**
+   * Clear cache
+   */
+  clearCache() {
+    this.insightsCache.clear();
+  }
+
+  /**
+   * Set cache value
+   */
+  setCache(key, data, ttl) {
+    const expiresAt = Date.now() + ttl;
+    this.insightsCache.set(key, { data, expiresAt });
+  }
+
+  /**
+   * Get cache value
+   */
+  getCache(key) {
+    const cached = this.insightsCache.get(key);
+    if (!cached) return null;
+    if (Date.now() > cached.expiresAt) {
+      this.insightsCache.delete(key);
+      return null;
+    }
+    return cached.data;
+  }
 }
 
-module.exports = AIIntelligenceEngine;
+module.exports = new AIIntelligenceEngine();

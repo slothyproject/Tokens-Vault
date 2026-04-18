@@ -16,9 +16,9 @@ const OllamaCloudIntegration = {
         // Use backend proxy - no API key needed in browser
         baseUrl: '/api/ollama',
         defaultModel: localStorage.getItem('ollama_default_model') || 'gemma3:27b',
-        fallbackModel: 'gemma3:4b',
+        fallbackModels: ['gemma3:4b', 'deepseek-v3.2', 'minimax-m2', 'glm-4.6'],
         timeout: 60000,
-        maxRetries: 2,
+        maxRetries: 3,
         temperature: 0.7,
         contextWindow: 4096
     },
@@ -253,47 +253,79 @@ Respond in JSON format:
         return false;
     },
     
-    // Generate AI completion (via backend proxy)
+    // Generate AI completion (via backend proxy) with auto-retry and fallback
     async generateCompletion(prompt, options = {}) {
-        const model = options.model || this.config.defaultModel;
         const temperature = options.temperature || this.config.temperature;
-        
-        try {
-            const response = await fetch('/api/ollama/generate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    model: model,
-                    prompt: prompt,
-                    stream: false,
-                    options: {
-                        temperature: temperature,
-                        num_ctx: this.config.contextWindow
+        const maxRetries = options.maxRetries || this.config.maxRetries;
+
+        // Get models to try (primary + fallbacks)
+        const modelsToTry = [
+            options.model || this.config.defaultModel,
+            ...(this.config.fallbackModels || [])
+        ];
+
+        for (let attempt = 0; attempt < maxRetries; attempt++) {
+            for (const model of modelsToTry) {
+                try {
+                    console.log(`[OllamaCloud] Generating with ${model} (attempt ${attempt + 1})...`);
+
+                    const response = await fetch('/api/ollama/generate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            model: model,
+                            prompt: prompt,
+                            stream: false,
+                            options: {
+                                temperature: temperature,
+                                num_predict: this.config.contextWindow
+                            }
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({}));
+                        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
                     }
-                })
-            });
-            
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+
+                    const data = await response.json();
+                    this.state.lastResponse = data;
+                    this.state.connected = true;
+
+                    // Update working model
+                    if (model !== this.config.defaultModel) {
+                        console.log(`[OllamaCloud] Fallback model ${model} worked!`);
+                        this.config.defaultModel = model;
+                    }
+
+                    return {
+                        success: true,
+                        response: data.response,
+                        model: model,
+                        tokens: data.eval_count || data.tokens || 0
+                    };
+
+                } catch (error) {
+                    console.warn(`[OllamaCloud] Model ${model} failed: ${error.message}`);
+
+                    // If this is the last model and last retry, return error
+                    if (model === modelsToTry[modelsToTry.length - 1] && attempt === maxRetries - 1) {
+                        console.error('[OllamaCloud] All models failed:', error);
+                        this.state.connected = false;
+
+                        return {
+                            success: false,
+                            error: error.message,
+                            fallback: true
+                        };
+                    }
+                }
             }
-            
-            const data = await response.json();
-            this.state.lastResponse = data;
-            
-            return {
-                success: true,
-                response: data.response,
-                model: model,
-                tokens: data.eval_count
-            };
-            
-        } catch (error) {
-            console.error('[OllamaCloud] Generation failed:', error);
-            return {
-                success: false,
-                error: error.message,
-                fallback: true
-            };
+
+            // Wait before retry
+            if (attempt < maxRetries - 1) {
+                await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+            }
         }
     },
     

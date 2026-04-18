@@ -717,8 +717,13 @@
             }
         }
 
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
+        // Initialize with proper error handling
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Initialize VaultCore first
+            if (VaultCore.init) {
+                await VaultCore.init();
+            }
+            
             if (!VaultCore.getSessionKey()) {
                 window.location.href = 'login.html';
                 return;
@@ -732,11 +737,15 @@
             updateSessionTimer();
 
             // Initialize all modules
-            VaultUI.init();
-            VaultHealth.init();
-            VaultDiscord.init();
-            VaultBackup.init();
-            VaultRailwaySync.init();
+            try {
+                VaultUI.init();
+                if (VaultHealth && VaultHealth.init) VaultHealth.init();
+                if (VaultDiscord && VaultDiscord.init) VaultDiscord.init();
+                if (VaultBackup && VaultBackup.init) VaultBackup.init();
+                if (VaultRailwaySync && VaultRailwaySync.init) VaultRailwaySync.init();
+            } catch (err) {
+                console.error('Module initialization error:', err);
+            }
 
             // Setup keyboard shortcuts
             setupKeyboardShortcuts();

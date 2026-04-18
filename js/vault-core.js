@@ -9,6 +9,31 @@ const VaultCore = {
         warningMinutes: 1 // Show warning 1 minute before lock
     },
 
+    // Initialize VaultCore
+    async init() {
+        console.log('[VaultCore] Initializing...');
+        
+        // Update bootstrap loader if exists
+        if (typeof window.updateBootstrapProgress === 'function') {
+            window.updateBootstrapProgress(30, 'Initializing vault core...', 'Setting up encryption');
+        }
+        
+        // Check dependencies
+        if (typeof CryptoJS === 'undefined') {
+            console.error('[VaultCore] CryptoJS not loaded!');
+            return false;
+        }
+        
+        // Setup complete
+        console.log('[VaultCore] Initialized successfully');
+        
+        if (typeof window.updateBootstrapProgress === 'function') {
+            window.updateBootstrapProgress(40, 'Vault core ready', 'Loading UI components...');
+        }
+        
+        return true;
+    },
+
     // Session timeout tracking
     sessionTimeout: {
         lastActivity: Date.now(),

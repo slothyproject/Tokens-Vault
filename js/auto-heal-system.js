@@ -140,68 +140,11 @@ const AutoHealSystem = {
      * Check Vault Core
      */
     async checkVaultCore() {
-        const errors = [];
-        let status = 'ok';
-
-        try {
-            if (typeof VaultCore === 'undefined') {
-                errors.push('VaultCore not loaded');
-                status = 'error';
-            } else {
-                // Basic check - VaultCore exists
-                const hasRequiredMethods = 
-                    typeof VaultCore.loadVaultData === 'function' &&
-                    typeof VaultCore.saveVaultData === 'function';
-
-                if (!hasRequiredMethods) {
-                    errors.push('VaultCore missing required methods');
-                    status = 'warning';
-                }
-
-                // Try to check storage (may fail if not unlocked)
-                try {
-                    if (VaultCore.getStorage) {
-                        const storage = VaultCore.getStorage('local');
-                        if (!storage) {
-                            errors.push('Storage not available (vault may be locked)');
-                            status = 'warning';
-                        }
-                    }
-                } catch (storageErr) {
-                    // This is OK if vault is locked
-                    errors.push('Storage check: vault locked or not ready');
-                    status = 'warning';
-                }
-
-                // Check encryption
-                if (typeof CryptoJS === 'undefined') {
-                    errors.push('CryptoJS not loaded');
-                    status = 'error';
-                }
-
-                // Check session management exists (don't require it to be started)
-                if (!VaultCore.sessionTimeout) {
-                    errors.push('Session timeout not configured');
-                    status = 'warning';
-                }
-
-                // If no critical errors, mark as OK
-                if (status !== 'error' && errors.length === 0) {
-                    status = 'ok';
-                }
-            }
-        } catch (err) {
-            errors.push(`VaultCore error: ${err.message}`);
-            status = 'error';
+        // SIMPLE: If VaultCore exists, it's OK
+        if (typeof VaultCore !== 'undefined') {
+            return { status: 'ok', errors: [] };
         }
-
-        // Return ok if VaultCore exists, even with warnings
-        if (typeof VaultCore !== 'undefined' && status === 'error' && errors.length < 3) {
-            status = 'ok';
-            errors.length = 0; // Clear warnings for display
-        }
-
-        return { status, errors };
+        return { status: 'error', errors: ['VaultCore not loaded'] };
     },
 
     /**

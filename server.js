@@ -80,6 +80,7 @@ app.use('/api/ollama/', ollamaLimiter);
 // Import database and routes
 const { initDatabase } = require('./database/database');
 const authRoutes = require('./routes/auth');
+const serviceRoutes = require('./routes/services');
 
 // Initialize database on startup
 initDatabase().then(connected => {
@@ -90,8 +91,9 @@ initDatabase().then(connected => {
     }
 });
 
-// Mount auth routes
+// Mount routes
 app.use('/api/auth', authRoutes);
+app.use('/api/services', serviceRoutes);
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true }));

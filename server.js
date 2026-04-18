@@ -9,6 +9,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const axios = require('axios');
+const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const app = express();
@@ -49,6 +50,33 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token', 'X-Requested-With']
 }));
 
+// Rate limiting
+const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+    message: {
+        error: 'Too many requests',
+        message: 'Please try again later',
+        retryAfter: '15 minutes'
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    skip: (req) => req.path === '/api/health' // Skip health checks
+});
+
+const ollamaLimiter = rateLimit({
+    windowMs: 60 * 1000, // 1 minute
+    max: 10, // 10 requests per minute
+    message: {
+        error: 'Ollama rate limit exceeded',
+        message: 'Please slow down your AI requests'
+    }
+});
+
+// Apply rate limiting
+app.use('/api/', apiLimiter);
+app.use('/api/ollama/', ollamaLimiter);
+
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true }));
 
@@ -57,6 +85,90 @@ app.use((req, res, next) => {
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
     next();
 });
+
+// ============================================
+// INPUT VALIDATION MIDDLEWARE
+// ============================================
+
+/**
+ * Validate Ollama generate request
+ */
+const validateGenerateRequest = (req, res, next) => {
+    const { model, prompt } = req.body;
+    const errors = [];
+
+    // Validate model
+    if (!model) {
+        errors.push('model is required');
+    } else if (typeof model !== 'string') {
+        errors.push('model must be a string');
+    } else if (model.length > 100) {
+        errors.push('model name too long (max 100 chars)');
+    } else if (!/^[a-zA-Z0-9_\-\:\/]+$/.test(model)) {
+        errors.push('model contains invalid characters');
+    }
+
+    // Validate prompt
+    if (!prompt) {
+        errors.push('prompt is required');
+    } else if (typeof prompt !== 'string') {
+        errors.push('prompt must be a string');
+    } else if (prompt.length > 10000) {
+        errors.push('prompt too long (max 10000 chars)');
+    }
+
+    if (errors.length > 0) {
+        return res.status(400).json({
+            error: 'Validation failed',
+            message: errors.join(', '),
+            details: errors
+        });
+    }
+
+    // Sanitize inputs
+    req.body.model = model.trim();
+    req.body.prompt = prompt.trim();
+
+    next();
+};
+
+/**
+ * Validate Ollama chat request
+ */
+const validateChatRequest = (req, res, next) => {
+    const { model, messages } = req.body;
+    const errors = [];
+
+    // Validate model
+    if (!model) {
+        errors.push('model is required');
+    } else if (typeof model !== 'string') {
+        errors.push('model must be a string');
+    } else if (model.length > 100) {
+        errors.push('model name too long');
+    }
+
+    // Validate messages
+    if (!messages) {
+        errors.push('messages is required');
+    } else if (!Array.isArray(messages)) {
+        errors.push('messages must be an array');
+    } else if (messages.length === 0) {
+        errors.push('messages array cannot be empty');
+    } else if (messages.length > 100) {
+        errors.push('too many messages (max 100)');
+    }
+
+    if (errors.length > 0) {
+        return res.status(400).json({
+            error: 'Validation failed',
+            message: errors.join(', '),
+            details: errors
+        });
+    }
+
+    next();
+};
 
 // ============================================
 // OLLAMA PROXY ENDPOINTS
@@ -109,7 +221,7 @@ app.get('/api/ollama/tags', async (req, res) => {
  * Proxy: Generate text
  * POST /api/ollama/generate
  */
-app.post('/api/ollama/generate', async (req, res) => {
+app.post('/api/ollama/generate', validateGenerateRequest, async (req, res) => {
     if (!OLLAMA_API_KEY) {
         return res.status(503).json({
             error: 'Ollama not configured',
@@ -163,7 +275,7 @@ app.post('/api/ollama/generate', async (req, res) => {
  * Proxy: Chat completion
  * POST /api/ollama/chat
  */
-app.post('/api/ollama/chat', async (req, res) => {
+app.post('/api/ollama/chat', validateChatRequest, async (req, res) => {
     if (!OLLAMA_API_KEY) {
         return res.status(503).json({
             error: 'Ollama not configured',

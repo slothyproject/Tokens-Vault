@@ -204,6 +204,9 @@ const VaultUI = {
                         <button class="btn-secondary" onclick="VaultUI.showSharedVariables()">
                             🔗 Manage Shared Variables
                         </button>
+                        <button class="btn-secondary sync-all-btn" id="syncAllBtn-${serviceId}" onclick="VaultUI.syncAllVariables('${serviceId}')" title="Sync all pending variables to Railway">
+                            🔄 Sync All
+                        </button>
                         <button class="btn-secondary" onclick="VaultUI.viewLogs('${serviceId}')" title="View Live Logs">
                             📋 View Logs
                         </button>
@@ -256,41 +259,19 @@ const VaultUI = {
             }
 
             // Continue with variables rendering...
-            this.renderVariablesSection(service, serviceData, serviceId, html);
+            html = this.renderVariablesSection(service, serviceData, serviceId, html);
             
         } catch (error) {
             console.error('[VaultUI] ERROR in buildServiceContent:', error);
             throw error; // Re-throw to be caught by parent
         }
     },
-                const isOverridden = key in localData;
-                html += `
-                    <div class="variable-card shared-variable ${isOverridden ? 'overridden' : ''}">
-                        <div class="variable-header">
-                            <label>${key}</label>
-                            ${isOverridden ? '<span class="badge overridden">Local Override</span>' : '<span class="badge shared">Shared</span>'}
-                        </div>
-                        <p class="variable-desc">${isOverridden ? 'Local value overrides shared' : 'Inherited from shared variables'}</p>
-                        <div class="variable-input">
-                            <input type="text" 
-                                   value="${this.escapeHtml(value)}"
-                                   ${isOverridden ? '' : 'disabled'}
-                                   placeholder="${isOverridden ? 'Local override' : 'Edit in Shared Variables'}"
-                                   onchange="${isOverridden ? `VaultUI.updateVariable('${serviceId}', '${key}', this.value)` : ''}"
-                            >
-                        </div>
-                        ${isOverridden ? `
-                            <button class="btn-link" onclick="VaultUI.removeLocalOverride('${serviceId}', '${key}')">
-                                ↩️ Revert to Shared Value
-                            </button>
-                        ` : ''}
-                    </div>
-                `;
-            });
-            
-            html += '</div></div>';
-        }
 
+    // Render variables section - extracts the inline rendering code
+    renderVariablesSection(service, serviceData, serviceId, html) {
+        const vaultData = this.vaultData || VaultCore.loadVaultData() || { services: {} };
+        const localData = vaultData.services?.[serviceId] || {};
+        
         // Render categories if they exist
         if (service.categories && service.categories.length > 0) {
             service.categories.forEach(category => {
@@ -308,7 +289,7 @@ const VaultUI = {
                     const isSecret = variable.type === 'secret' || variable.sensitive;
 
                     html += `
-                        <div class="variable-card">
+                        <div class="variable-card" data-service-id="${serviceId}" data-variable="${variable.key}">
                             <div class="variable-header">
                                 <label>${variable.key}</label>
                                 ${variable.required ? '<span class="badge required">Required</span>' : ''}
@@ -318,7 +299,7 @@ const VaultUI = {
                                 <input type="${isSecret ? 'password' : 'text'}" 
                                        value="${this.escapeHtml(value)}"
                                        placeholder="${variable.default || ''}"
-                                       onchange="VaultUI.updateVariable('${serviceId}', '${variable.key}', this.value)"
+                                       onchange="VaultUI.updateVariableWithSync('${serviceId}', '${variable.key}', this.value)"
                                 >
                             </div>
                         </div>
@@ -341,7 +322,7 @@ const VaultUI = {
                 const hasGenerator = suggestions.generator;
 
                 html += `
-                    <div class="variable-card ${!validation.valid ? 'invalid' : validation.warning ? 'warning' : ''} ${this.bulkEditMode && this.selectedVariables.includes(variable.key) ? 'selected' : ''}">
+                    <div class="variable-card ${!validation.valid ? 'invalid' : validation.warning ? 'warning' : ''} ${this.bulkEditMode && this.selectedVariables.includes(variable.key) ? 'selected' : ''}" data-service-id="${serviceId}" data-variable="${variable.key}">
                         <div class="variable-header">
                             ${this.bulkEditMode ? `
                                 <label class="checkbox-label">
@@ -367,7 +348,7 @@ const VaultUI = {
                                        data-key="${variable.key}"
                                        data-service="${serviceId}"
                                        oninput="VaultUI.handleVariableInput(this)"
-                                       onchange="VaultUI.updateVariable('${serviceId}', '${variable.key}', this.value)"
+                                       onchange="VaultUI.updateVariableWithSync('${serviceId}', '${variable.key}', this.value)"
                                 >
                                 ${hasGenerator ? `
                                     <button class="btn-generate" onclick="VaultUI.generateValue('${serviceId}', '${variable.key}')" title="Generate secure value">
@@ -413,7 +394,7 @@ const VaultUI = {
             `;
             customVars.forEach(([key, value]) => {
                 html += `
-                    <div class="variable-card">
+                    <div class="variable-card" data-service-id="${serviceId}" data-variable="${key}">
                         <div class="variable-header">
                             <label>${key}</label>
                             <button class="btn-icon" onclick="VaultUI.deleteCustomVariable('${serviceId}', '${key}')" title="Delete">🗑️</button>
@@ -421,7 +402,7 @@ const VaultUI = {
                         <div class="variable-input">
                             <input type="text" 
                                    value="${this.escapeHtml(value)}"
-                                   onchange="VaultUI.updateVariable('${serviceId}', '${key}', this.value)"
+                                   onchange="VaultUI.updateVariableWithSync('${serviceId}', '${key}', this.value)"
                             >
                         </div>
                     </div>
@@ -440,6 +421,8 @@ const VaultUI = {
         `;
 
         if (serviceContent) serviceContent.innerHTML = html;
+        
+        return html;
     },
 
     escapeHtml(text) {
@@ -448,16 +431,69 @@ const VaultUI = {
         return div.innerHTML;
     },
 
+    // Debounced save timeout
+    saveTimeout: null,
+
     updateVariable(serviceId, key, value) {
+        // Clear any pending save
+        if (this.saveTimeout) {
+            clearTimeout(this.saveTimeout);
+        }
+
         if (!this.vaultData.services[serviceId]) {
             this.vaultData.services[serviceId] = {};
         }
 
+        // Update immediately in memory
+        this.vaultData.services[serviceId][key] = value;
+
+        // Debounce the actual save (500ms)
+        this.saveTimeout = setTimeout(() => {
+            VaultCore.saveVaultData(this.vaultData);
+            VaultCore.addHistory(serviceId, key, 'updated');
+            this.showToast(`${key} updated`, 'success');
+            this.renderServices();
+        }, 500);
+    },
+
+    // Phase 1.1: Instant variable push with sync status
+    async updateVariableWithSync(serviceId, key, value) {
+        // Step 1: Save locally first (immediate feedback)
+        if (!this.vaultData.services[serviceId]) {
+            this.vaultData.services[serviceId] = {};
+        }
         this.vaultData.services[serviceId][key] = value;
         VaultCore.saveVaultData(this.vaultData);
         VaultCore.addHistory(serviceId, key, 'updated');
-
-        this.showToast(`${key} updated`, 'success');
+        
+        // Step 2: Show "Syncing..." status
+        if (typeof VaultRailwaySync !== 'undefined') {
+            VaultRailwaySync.setVariableSyncStatus(serviceId, key, 'syncing');
+        }
+        
+        // Step 3: Push to Railway
+        if (typeof VaultRailwaySync !== 'undefined') {
+            try {
+                const result = await VaultRailwaySync.pushVariable(serviceId, key, value);
+                
+                if (result.success) {
+                    this.showToast(`${key} saved & synced to Railway`, 'success');
+                } else if (result.conflict) {
+                    // Conflict modal will be shown by pushVariable
+                    this.showToast(`${key} conflict detected - needs resolution`, 'warning');
+                } else {
+                    this.showToast(`${key} saved locally but sync failed: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                console.error('[VaultUI] Sync failed:', error);
+                this.showToast(`${key} saved locally - sync error`, 'error');
+            }
+        } else {
+            // Railway sync not available, just show local save
+            this.showToast(`${key} updated (local only)`, 'success');
+        }
+        
+        // Step 4: Refresh UI
         this.renderServices();
     },
 
@@ -481,6 +517,69 @@ const VaultUI = {
             this.selectService(serviceId);
             this.showToast(`${key} deleted`, 'success');
         }
+    },
+
+    // Phase 1.4: Sync all pending variables to Railway
+    async syncAllVariables(serviceId) {
+        if (typeof VaultRailwaySync === 'undefined') {
+            this.showToast('Railway sync not available', 'error');
+            return;
+        }
+
+        const btn = document.getElementById(`syncAllBtn-${serviceId}`);
+        if (btn) {
+            btn.classList.add('syncing');
+            btn.disabled = true;
+        }
+
+        const serviceData = this.vaultData.services[serviceId] || {};
+        const variables = Object.entries(serviceData);
+        
+        if (variables.length === 0) {
+            this.showToast('No variables to sync', 'info');
+            if (btn) {
+                btn.classList.remove('syncing');
+                btn.disabled = false;
+            }
+            return;
+        }
+
+        this.showToast(`Syncing ${variables.length} variables...`, 'info');
+        
+        let successCount = 0;
+        let failCount = 0;
+        let conflictCount = 0;
+
+        for (const [key, value] of variables) {
+            try {
+                const result = await VaultRailwaySync.pushVariable(serviceId, key, value);
+                if (result.success) {
+                    successCount++;
+                } else if (result.conflict) {
+                    conflictCount++;
+                } else {
+                    failCount++;
+                }
+            } catch (error) {
+                console.error(`[VaultUI] Failed to sync ${key}:`, error);
+                failCount++;
+            }
+        }
+
+        if (btn) {
+            btn.classList.remove('syncing');
+            btn.disabled = false;
+        }
+
+        // Show summary
+        if (failCount === 0 && conflictCount === 0) {
+            this.showToast(`✓ All ${successCount} variables synced successfully`, 'success');
+        } else {
+            this.showToast(`Synced: ${successCount}, Failed: ${failCount}, Conflicts: ${conflictCount}`, 'warning');
+        }
+
+        // Refresh UI
+        this.selectService(serviceId);
     },
 
     async deployService(serviceId) {
@@ -1115,7 +1214,7 @@ const VaultUI = {
                              tabindex="0">
                             <div class="search-result-key">${this.highlightMatch(v.key, query)}</div>
                             <div class="search-result-value">
-                                ${v.isSecret ? '••••••••' : this.truncateValue(v.value)}
+                                ${v.isSecret ? '••••••••' : this.escapeHtml(this.truncateValue(v.value))}
                             </div>
                             ${v.description ? `<div class="search-result-desc">${v.description}</div>` : ''}
                         </div>

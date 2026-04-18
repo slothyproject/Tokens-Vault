@@ -15,6 +15,124 @@
                    base-uri 'self';
                    form-action 'self';">
     <title>AI Central Hub | Intelligent Service Management</title>
+    
+    <!-- INLINE BOOTSTRAP LOADER - Runs Immediately -->
+    <script>
+    (function() {
+        'use strict';
+        
+        // Create loader immediately
+        const loader = document.createElement('div');
+        loader.id = 'ch-bootstrap-loader';
+        loader.innerHTML = `
+            <div id="ch-loader-content" style="
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+                z-index: 999999;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                font-family: 'Inter', system-ui, -apple-system, sans-serif;
+                transition: opacity 0.5s ease, visibility 0.5s ease;
+            ">
+                <div style="text-align: center; padding: 40px; max-width: 400px;">
+                    <!-- Logo -->
+                    <div style="font-size: 64px; margin-bottom: 20px; animation: pulse 2s infinite;">🔧</div>
+                    
+                    <!-- Title -->
+                    <h1 style="color: #fff; margin: 0 0 10px 0; font-size: 32px; font-weight: 700; letter-spacing: -0.5px;">
+                        Central Hub
+                    </h1>
+                    
+                    <!-- Subtitle -->
+                    <p style="color: #888; margin: 0 0 40px 0; font-size: 16px; line-height: 1.5;">
+                        Intelligent Service Management
+                    </p>
+                    
+                    <!-- Progress Container -->
+                    <div style="background: rgba(255,255,255,0.1); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                        <!-- Progress Bar -->
+                        <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; margin-bottom: 15px;">
+                            <div id="ch-loader-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #667eea, #764ba2, #f093fb); border-radius: 3px; transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);"></div>
+                        </div>
+                        
+                        <!-- Status Text -->
+                        <p id="ch-loader-status" style="color: #667eea; margin: 0; font-size: 14px; font-weight: 500; min-height: 20px;">
+                            Initializing...
+                        </p>
+                        
+                        <!-- Module Details -->
+                        <p id="ch-loader-detail" style="color: #666; margin: 8px 0 0 0; font-size: 12px; font-family: 'Courier New', monospace; min-height: 16px;"></p>
+                    </div>
+                    
+                    <!-- Version -->
+                    <p style="color: #444; margin: 0; font-size: 12px;">v3.1.0</p>
+                </div>
+            </div>
+            
+            <style>
+                @keyframes pulse {
+                    0%, 100% { transform: scale(1); opacity: 1; }
+                    50% { transform: scale(1.1); opacity: 0.8; }
+                }
+                
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+            </style>
+        `;
+        
+        // Insert immediately
+        if (document.documentElement) {
+            document.documentElement.appendChild(loader);
+        } else {
+            // Fallback: wait for document
+            document.addEventListener('DOMContentLoaded', function() {
+                document.body.appendChild(loader);
+            });
+        }
+        
+        // Global update function
+        window.updateBootstrapProgress = function(percent, status, detail) {
+            const bar = document.getElementById('ch-loader-bar');
+            const statusEl = document.getElementById('ch-loader-status');
+            const detailEl = document.getElementById('ch-loader-detail');
+            
+            if (bar) bar.style.width = Math.min(percent, 100) + '%';
+            if (statusEl) statusEl.textContent = status || '';
+            if (detailEl) detailEl.textContent = detail || '';
+            
+            console.log('[Central Hub] Loading: ' + percent + '% - ' + status);
+        };
+        
+        // Global hide function
+        window.hideBootstrapLoader = function() {
+            updateBootstrapProgress(100, 'Ready!', 'All systems operational');
+            
+            setTimeout(function() {
+                const el = document.getElementById('ch-bootstrap-loader');
+                if (el) {
+                    el.style.opacity = '0';
+                    el.style.visibility = 'hidden';
+                    setTimeout(function() {
+                        if (el.parentNode) el.parentNode.removeChild(el);
+                    }, 500);
+                }
+            }, 300);
+        };
+        
+        // Start progress
+        updateBootstrapProgress(5, 'Starting up...', 'Loading core dependencies');
+        
+    })();
+    </script>
+    
     <link rel="stylesheet" href="css/vault.css">
     <link rel="stylesheet" href="css/central-hub.css">
     <link rel="stylesheet" href="css/ai-modern-theme.css">
@@ -919,6 +1037,57 @@
             VaultUI.showToast('Ollama Cloud configuration saved', 'success');
             closeModal('ollamaCloudModal');
         }
+        // Bootstrap loader - update progress as modules load
+        (function() {
+            'use strict';
+            
+            const modules = [
+                { name: 'CryptoJS', check: () => typeof CryptoJS !== 'undefined', weight: 10 },
+                { name: 'VaultCore', check: () => typeof VaultCore !== 'undefined', weight: 25 },
+                { name: 'VaultUI', check: () => typeof VaultUI !== 'undefined', weight: 20 },
+                { name: 'OllamaCloudIntegration', check: () => typeof OllamaCloudIntegration !== 'undefined', weight: 15 },
+                { name: 'AIHealingEngine', check: () => typeof AIHealingEngine !== 'undefined', weight: 15 },
+                { name: 'DebugPanel', check: () => typeof DebugPanel !== 'undefined', weight: 15 }
+            ];
+            
+            let loadedWeight = 5; // Start at 5%
+            const totalWeight = modules.reduce((sum, m) => sum + m.weight, 0) + 5;
+            
+            function checkModules() {
+                let statusText = 'Loading modules...';
+                let detailText = '';
+                
+                modules.forEach(mod => {
+                    if (mod.check() && loadedWeight < totalWeight) {
+                        loadedWeight += mod.weight;
+                        detailText = mod.name + ' ready';
+                    }
+                });
+                
+                const percent = Math.min((loadedWeight / totalWeight) * 100, 95);
+                
+                if (typeof window.updateBootstrapProgress === 'function') {
+                    window.updateBootstrapProgress(percent, statusText, detailText);
+                }
+                
+                // Check if all modules loaded
+                const allLoaded = modules.every(m => m.check());
+                
+                if (allLoaded) {
+                    window.updateBootstrapProgress(100, 'Ready!', 'All systems operational');
+                    setTimeout(() => {
+                        if (typeof window.hideBootstrapLoader === 'function') {
+                            window.hideBootstrapLoader();
+                        }
+                    }, 500);
+                } else {
+                    setTimeout(checkModules, 100);
+                }
+            }
+            
+            // Start checking
+            setTimeout(checkModules, 100);
+        })();
     </script>
 </body>
 </html>

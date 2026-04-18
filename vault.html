@@ -4,6 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="Content-Security-Policy" 
+          content="default-src 'self'; 
+                   script-src 'self' https://cdnjs.cloudflare.com 'unsafe-inline'; 
+                   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; 
+                   font-src 'self' https://fonts.gstatic.com;
+                   connect-src 'self' https://api.ollama.com https://backboard.railway.app https://discord.com;
+                   img-src 'self' data: blob: https:;
+                   frame-ancestors 'none';
+                   base-uri 'self';
+                   form-action 'self';">
     <title>AI Central Hub | Intelligent Service Management</title>
     <link rel="stylesheet" href="css/vault.css">
     <link rel="stylesheet" href="css/central-hub.css">

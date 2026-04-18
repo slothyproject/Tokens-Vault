@@ -379,7 +379,7 @@ const VaultCore = {
 
             const key = CryptoJS.PBKDF2(password, meta.salt, { 
                 keySize: 256/32, 
-                iterations: 10000 
+                iterations: 100000 
             });
             const keyHash = CryptoJS.SHA256(key.toString()).toString();
 

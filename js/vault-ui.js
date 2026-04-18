@@ -40,6 +40,32 @@ const VaultUI = {
         });
     },
 
+    /**
+     * Get shared variables for a service (inherited from shared pool)
+     * @param {string} serviceId - Service identifier
+     * @returns {Object} Shared variables not overridden by service
+     */
+    getSharedVariablesForService(serviceId) {
+        const data = VaultCore.loadVaultData();
+        if (!data) {
+            console.warn('[VaultUI] No vault data loaded');
+            return {};
+        }
+        
+        const shared = data.shared || {};
+        const serviceVars = data.services?.[serviceId] || {};
+        
+        // Return only shared vars that aren't overridden locally
+        const result = {};
+        Object.keys(shared).forEach(key => {
+            if (!serviceVars.hasOwnProperty(key)) {
+                result[key] = shared[key];
+            }
+        });
+        
+        return result;
+    },
+
     async loadServicesConfig() {
         try {
             const response = await fetch('vault-services.json');

@@ -25,9 +25,28 @@ if (!OLLAMA_API_KEY) {
 }
 
 // Middleware
+// Allowed origins
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
+    'http://localhost:8080',
+    'http://localhost:3000',
+    'https://dissidenttokens.mastertibbles.co.uk',
+    'https://dissident-tokens-vault-production.up.railway.app'
+];
+
 app.use(cors({
-    origin: true,
-    credentials: true
+    origin: function(origin, callback) {
+        // Allow requests with no origin (mobile apps, curl, etc.)
+        if (!origin) return callback(null, true);
+
+        if (allowedOrigins.indexOf(origin) === -1) {
+            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+            return callback(new Error(msg), false);
+        }
+        return callback(null, true);
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token', 'X-Requested-With']
 }));
 
 app.use(express.json({ limit: '50mb' }));

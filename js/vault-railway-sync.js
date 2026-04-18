@@ -486,9 +486,10 @@ const VaultRailwaySync = {
             }
         `;
 
+        // Note: Railway's newer API may not require projectId for variable upsert
+        // The serviceId (which is the Railway service ID) is sufficient
         const variables = {
             input: {
-                projectId: service.railwayProject,
                 serviceId: service.railwayService,
                 variables: {
                     [key]: value

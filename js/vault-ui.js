@@ -420,6 +420,8 @@ const VaultUI = {
             </div>
         `;
 
+        // Get serviceContent element and render
+        const serviceContent = document.getElementById('serviceContent');
         if (serviceContent) serviceContent.innerHTML = html;
         
         return html;

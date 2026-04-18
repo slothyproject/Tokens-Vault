@@ -15,23 +15,32 @@ const OllamaCloudIntegration = {
     config: {
         // Use backend proxy - no API key needed in browser
         baseUrl: '/api/ollama',
-        defaultModel: localStorage.getItem('ollama_default_model') || 'llama3.2:latest',
-        fallbackModel: 'phi4-mini:latest',
+        defaultModel: localStorage.getItem('ollama_default_model') || 'gemma3:27b',
+        fallbackModel: 'gemma3:4b',
         timeout: 60000,
         maxRetries: 2,
         temperature: 0.7,
         contextWindow: 4096
     },
     
-    // Available models on Ollama Cloud
+    // Available models on Ollama Cloud (from /api/tags endpoint)
     availableModels: [
-        { id: 'llama3.2:latest', name: 'Llama 3.2', description: 'General purpose, fast', category: 'general' },
-        { id: 'qwen2.5:latest', name: 'Qwen 2.5', description: 'Coding & reasoning', category: 'coding' },
-        { id: 'phi4-mini:latest', name: 'Phi-4 Mini', description: 'Lightweight, fast', category: 'fast' },
-        { id: 'gemma3:1b', name: 'Gemma 3 1B', description: 'Ultra lightweight', category: 'fast' },
-        { id: 'exaone3.5:latest', name: 'EXAONE 3.5', description: 'Korean/English', category: 'multilingual' },
-        { id: 'deepcoder:latest', name: 'DeepCoder', description: 'Code generation', category: 'coding' },
-        { id: 'codegemma:latest', name: 'CodeGemma', description: 'Code-focused', category: 'coding' }
+        { id: 'gemma3:27b', name: 'Gemma 3 27B', description: 'Google\'s large multimodal model', category: 'general' },
+        { id: 'gemma3:12b', name: 'Gemma 3 12B', description: 'Balanced performance', category: 'general' },
+        { id: 'gemma3:4b', name: 'Gemma 3 4B', description: 'Fast and efficient', category: 'fast' },
+        { id: 'deepseek-v3.2', name: 'DeepSeek V3.2', description: 'Advanced reasoning', category: 'coding' },
+        { id: 'deepseek-v3.1:671b', name: 'DeepSeek V3.1 671B', description: 'Massive model', category: 'coding' },
+        { id: 'qwen3.5:397b', name: 'Qwen 3.5 397B', description: 'Alibaba\'s latest', category: 'general' },
+        { id: 'qwen3-coder:480b', name: 'Qwen 3 Coder 480B', description: 'Coding specialist', category: 'coding' },
+        { id: 'kimi-k2.5', name: 'Kimi K2.5', description: 'Long context', category: 'general' },
+        { id: 'kimi-k2-thinking', name: 'Kimi K2 Thinking', description: 'Reasoning model', category: 'general' },
+        { id: 'minimax-m2', name: 'MiniMax M2', description: 'Multilingual', category: 'general' },
+        { id: 'glm-4.6', name: 'GLM 4.6', description: 'General purpose', category: 'general' },
+        { id: 'glm-4.7', name: 'GLM 4.7', description: 'Latest GLM', category: 'general' },
+        { id: 'glm-5', name: 'GLM 5', description: 'Next generation', category: 'general' },
+        { id: 'ministral-3:8b', name: 'Mistral Mini 3 8B', description: 'Efficient', category: 'fast' },
+        { id: 'ministral-3:14b', name: 'Mistral Mini 3 14B', description: 'Balanced', category: 'general' },
+        { id: 'mistral-large-3:675b', name: 'Mistral Large 3', description: 'Most capable', category: 'general' }
     ],
     
     // State

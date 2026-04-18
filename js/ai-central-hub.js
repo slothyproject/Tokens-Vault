@@ -1031,7 +1031,7 @@ const AICentralHub = {
             { status: 'disconnected', color: '#ef4444', icon: '❌' };
         
         // Get current model from Ollama config
-        const currentModel = OllamaCloudIntegration?.config?.defaultModel || 'llama3.2:latest';
+        const currentModel = OllamaCloudIntegration?.config?.defaultModel || 'gemma3:27b';
         
         return `
             <div class="ai-settings">

@@ -47,7 +47,7 @@ async function testEndpoints() {
     console.log('─────────────────────────────────────────────');
     try {
         const response = await axios.post(`${RAILWAY_URL}/api/ollama/generate`, {
-            model: 'llama3.2:latest',
+            model: 'gemma3:27b',
             prompt: 'Say "test successful"',
             stream: false
         }, { timeout: 60000 });
@@ -68,7 +68,7 @@ async function testEndpoints() {
     console.log('────────────────────────────────────────');
     try {
         const response = await axios.post(`${RAILWAY_URL}/api/ollama/chat`, {
-            model: 'llama3.2:latest',
+            model: 'gemma3:27b',
             messages: [
                 { role: 'user', content: 'Hello' }
             ],

@@ -479,7 +479,7 @@ Respond ONLY in JSON:
 }`;
         
         const response = await OllamaCloudIntegration?.generateCompletion(prompt, {
-            model: 'llama3.2:latest',
+            model: 'gemma3:27b',
             temperature: 0.3
         });
         
@@ -517,7 +517,7 @@ Generate a fix configuration. Response format:
 }`;
         
         const response = await OllamaCloudIntegration?.generateCompletion(prompt, {
-            model: 'llama3.2:latest',
+            model: 'gemma3:27b',
             temperature: 0.3
         });
         

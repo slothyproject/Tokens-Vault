@@ -81,10 +81,7 @@ app.use('/api/ollama/', ollamaLimiter);
 const { initDatabase } = require('./database/database');
 const authRoutes = require('./routes/auth');
 const serviceRoutes = require('./routes/services');
-const WebSocketServer = require('./services/websocket-server');
-const WebhookHandler = require('./services/webhook-handler');
-const ServiceManager = require('./services/service-manager');
-const credentialVault = require('./services/credential-vault');
+const aiRoutes = require('./routes/ai');
 
 // Initialize database on startup
 initDatabase().then(connected => {
@@ -98,6 +95,7 @@ initDatabase().then(connected => {
 // Mount routes
 app.use('/api/auth', authRoutes);
 app.use('/api/services', serviceRoutes);
+app.use('/api/ai', aiRoutes);
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true }));

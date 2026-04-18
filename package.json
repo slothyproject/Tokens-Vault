@@ -18,9 +18,11 @@
     "graphql-tag": "^2.12.6",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.3",
+    "ml-regression": "^6.3.0",
     "pg": "^8.20.0",
     "pg-pool": "^3.13.0",
     "sequelize": "^6.37.8",
+    "simple-statistics": "^7.8.9",
     "ws": "^8.20.0"
   },
   "devDependencies": {

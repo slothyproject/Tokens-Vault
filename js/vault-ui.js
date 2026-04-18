@@ -207,10 +207,13 @@ const VaultUI = {
                         <button class="btn-secondary sync-all-btn" id="syncAllBtn-${serviceId}" onclick="VaultUI.syncAllVariables('${serviceId}')" title="Sync all pending variables to Railway">
                             🔄 Sync All
                         </button>
+                        <button class="btn-secondary unified-sync-btn" id="unifiedSyncBtn-${serviceId}" onclick="VaultUI.unifiedSyncService('${serviceId}')" title="Sync to ALL services (Discord Bot, Website, API)">
+                            🌐 Unified Sync
+                        </button>
                         <button class="btn-secondary" onclick="VaultUI.viewLogs('${serviceId}')" title="View Live Logs">
                             📋 View Logs
                         </button>
-                        <button class="btn-primary" onclick="VaultUI.deployService('${serviceId}')">
+                        <button class="btn-primary" onclick="VaultUI.deployService('${serviceId}'">
                             🚀 Deploy to Railway
                         </button>
                     </div>
@@ -582,6 +585,66 @@ const VaultUI = {
 
         // Refresh UI
         this.selectService(serviceId);
+    },
+
+    // Unified sync: Sync service variables to ALL related services
+    async unifiedSyncService(serviceId) {
+        if (typeof VaultUnifiedSync === 'undefined') {
+            this.showToast('Unified sync module not available', 'error');
+            return;
+        }
+
+        const btn = document.getElementById(`unifiedSyncBtn-${serviceId}`);
+        if (btn) {
+            btn.classList.add('syncing');
+            btn.disabled = true;
+        }
+
+        const serviceData = this.vaultData.services[serviceId] || {};
+        const variables = Object.entries(serviceData);
+        
+        if (variables.length === 0) {
+            this.showToast('No variables to sync', 'info');
+            if (btn) {
+                btn.classList.remove('syncing');
+                btn.disabled = false;
+            }
+            return;
+        }
+
+        this.showToast(`🌐 Starting unified sync for ${variables.length} variables...`, 'info');
+        
+        let totalServices = 0;
+        let successCount = 0;
+        let failCount = 0;
+
+        // Sync each variable to all its services
+        for (const [key, value] of variables) {
+            const result = await VaultUnifiedSync.syncVariableToAllServices(key, value, { 
+                silent: true 
+            });
+            
+            if (result.services) {
+                totalServices += result.services.length;
+                successCount += result.summary?.success || 0;
+                failCount += result.summary?.failed || 0;
+            }
+        }
+
+        if (btn) {
+            btn.classList.remove('syncing');
+            btn.disabled = false;
+        }
+
+        // Show summary
+        if (failCount === 0) {
+            this.showToast(`✓ Unified sync complete! ${successCount} service updates`, 'success');
+        } else {
+            this.showToast(`✓ ${successCount} synced, ${failCount} failed`, 'warning');
+        }
+
+        // Show detailed summary modal
+        VaultUnifiedSync.showDeploySummary(result.services || []);
     },
 
     async deployService(serviceId) {

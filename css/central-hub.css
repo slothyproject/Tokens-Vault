@@ -814,3 +814,368 @@
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
 }
+
+/* ============================================
+   OLLAMA CLOUD INTEGRATION STYLES
+   ============================================ */
+
+.ai-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    font-weight: 500;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.ai-model-selector {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding: 12px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+}
+
+.ai-model-selector select {
+    flex: 1;
+    padding: 8px 12px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: 14px;
+}
+
+.connection-status {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+}
+
+.connection-status.connected {
+    background: rgba(34, 197, 94, 0.2);
+    color: var(--accent-green);
+}
+
+.connection-status.disconnected {
+    background: rgba(239, 68, 68, 0.2);
+    color: var(--accent-red);
+}
+
+/* Ollama Config Panel */
+.ollama-config-panel {
+    padding: 20px;
+}
+
+.ollama-config-panel .config-field {
+    margin-bottom: 16px;
+}
+
+.ollama-config-panel label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.ollama-config-panel input[type="text"],
+.ollama-config-panel input[type="range"],
+.ollama-config-panel select {
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-size: 14px;
+}
+
+.ollama-config-panel input:focus,
+.ollama-config-panel select:focus {
+    outline: none;
+    border-color: var(--accent-blue);
+}
+
+.ollama-config-panel input[type="range"] {
+    padding: 5px 0;
+}
+
+.ollama-config-panel .field-help {
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.ollama-config-panel .config-status {
+    margin: 20px 0;
+    padding: 12px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    text-align: center;
+}
+
+.ollama-config-panel .status-indicator {
+    font-weight: 500;
+}
+
+.ollama-config-panel .status-indicator.online {
+    color: var(--accent-green);
+}
+
+.ollama-config-panel .status-indicator.offline {
+    color: var(--accent-red);
+}
+
+/* AI Command Interface Styles */
+.ai-command-interface {
+    display: flex;
+    flex-direction: column;
+    height: 400px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.ai-chat-history {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+}
+
+.ai-chat-input-container {
+    display: flex;
+    padding: 12px;
+    background: var(--bg-tertiary);
+    border-top: 1px solid var(--border-color);
+    gap: 8px;
+}
+
+.ai-chat-input {
+    flex: 1;
+    padding: 10px 14px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-size: 14px;
+}
+
+.ai-chat-input:focus {
+    outline: none;
+    border-color: var(--accent-blue);
+}
+
+.ai-message {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.ai-message.user {
+    flex-direction: row-reverse;
+}
+
+.ai-message-avatar {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-tertiary);
+    border-radius: 50%;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.ai-message.user .ai-message-avatar {
+    background: var(--accent-blue);
+}
+
+.ai-message-content {
+    max-width: 70%;
+    padding: 12px 16px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-lg);
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.ai-message.user .ai-message-content {
+    background: var(--accent-blue);
+    color: white;
+}
+
+.ai-message-content pre {
+    margin-top: 8px;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: var(--radius-sm);
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 12px;
+    overflow-x: auto;
+}
+
+.ai-message-loading {
+    display: flex;
+    gap: 4px;
+    padding: 12px 16px;
+}
+
+.ai-message-loading span {
+    width: 8px;
+    height: 8px;
+    background: var(--accent-blue);
+    border-radius: 50%;
+    animation: bounce 1.4s infinite ease-in-out both;
+}
+
+.ai-message-loading span:nth-child(1) { animation-delay: -0.32s; }
+.ai-message-loading span:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes bounce {
+    0%, 80%, 100% { transform: scale(0); }
+    40% { transform: scale(1); }
+}
+
+/* AI-powered indicators */
+.ai-powered-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    background: linear-gradient(135deg, #8b5cf6, #6366f1);
+    border-radius: var(--radius-sm);
+    font-size: 10px;
+    font-weight: 600;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.ai-suggestion-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-left: 3px solid var(--accent-purple);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    margin-bottom: 12px;
+}
+
+.ai-suggestion-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.ai-suggestion-title {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.ai-suggestion-confidence {
+    padding: 2px 6px;
+    background: rgba(139, 92, 246, 0.2);
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    color: #8b5cf6;
+}
+
+.ai-suggestion-content {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.ai-suggestion-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+/* Diagnostic results with AI */
+.ai-diagnostic-result {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+}
+
+.ai-diagnostic-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.ai-diagnostic-status {
+    padding: 6px 12px;
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.ai-diagnostic-status.healthy {
+    background: rgba(34, 197, 94, 0.2);
+    color: var(--accent-green);
+}
+
+.ai-diagnostic-status.degraded {
+    background: rgba(245, 158, 11, 0.2);
+    color: #f59e0b;
+}
+
+.ai-diagnostic-status.critical {
+    background: rgba(239, 68, 68, 0.2);
+    color: var(--accent-red);
+}
+
+.ai-diagnostic-content h4 {
+    margin: 16px 0 8px;
+    color: var(--text-primary);
+    font-size: 14px;
+}
+
+.ai-diagnostic-content ul {
+    margin: 0;
+    padding-left: 20px;
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+.ai-diagnostic-content li {
+    margin-bottom: 6px;
+}
+
+.ai-model-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-color);
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+/* Responsive adjustments for AI features */
+@media (max-width: 768px) {
+    .ai-model-selector {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .ai-message-content {
+        max-width: 85%;
+    }
+    
+    .ai-chat-input-container {
+        padding: 8px;
+    }
+}

@@ -44,6 +44,10 @@
                 🤖
             </button>
 
+            <button class="btn-icon" onclick="showOllamaCloudSettings()" title="Ollama Cloud AI Models">
+                🧠
+            </button>
+
             <button class="btn-icon" onclick="showSettings()" title="Settings">
                 ⚙️
             </button>
@@ -400,6 +404,115 @@
         </div>
     </div>
 
+    <!-- Ollama Cloud Settings Modal -->
+    <div id="ollamaCloudModal" class="modal hidden">
+        <div class="modal-overlay" onclick="closeModal('ollamaCloudModal')"></div>
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2>🧠 Ollama Cloud AI Configuration</h2>
+                <button class="btn-close" onclick="closeModal('ollamaCloudModal')">✕</button>
+            </div>
+
+            <div class="modal-body">
+                <div class="ollama-intro" style="background: var(--bg-tertiary); padding: 16px; border-radius: var(--radius-md); margin-bottom: 20px;">
+                    <p><strong>🤖 AI-Powered Intelligence</strong></p>
+                    <p style="font-size: 14px; color: var(--text-secondary); margin-top: 8px;">
+                        Connect to Ollama Cloud to enhance your AI Central Hub with large language models for:
+                    </p>
+                    <ul style="font-size: 14px; color: var(--text-secondary); margin-top: 8px; padding-left: 20px;">
+                        <li>🎯 Intelligent diagnostics & troubleshooting</li>
+                        <li>💡 Smart variable suggestions</li>
+                        <li>🗣️ Natural language commands</li>
+                        <li>🔄 Automated deployment strategies</li>
+                        <li>📊 System optimization recommendations</li>
+                    </ul>
+                </div>
+
+                <div class="form-group">
+                    <label>Ollama Cloud Base URL</label>
+                    <input type="text" id="ollamaCloudUrl" 
+                           value="https://ollama-cloud.reddgr.com"
+                           placeholder="https://ollama-cloud.reddgr.com"
+                           style="font-family: monospace;">
+                    <p class="field-help">The Ollama Cloud instance URL. Default: ollama-cloud.reddgr.com</p>
+                </div>
+
+                <div class="form-group">
+                    <label>Default AI Model</label>
+                    <select id="ollamaCloudModel">
+                        <optgroup label="General Purpose">
+                            <option value="llama3.2:latest" selected>llama3.2:latest - Llama 3.2 (Balanced)</option>
+                        </optgroup>
+                        <optgroup label="Coding & Technical">
+                            <option value="qwen2.5:latest">qwen2.5:latest - Qwen 2.5 (Coding)</option>
+                            <option value="deepcoder:latest">deepcoder:latest - DeepCoder (Code Gen)</option>
+                            <option value="codegemma:latest">codegemma:latest - CodeGemma (Code Focus)</option>
+                        </optgroup>
+                        <optgroup label="Fast & Lightweight">
+                            <option value="phi4-mini:latest">phi4-mini:latest - Phi-4 Mini (Fast)</option>
+                            <option value="gemma3:1b">gemma3:1b - Gemma 3 1B (Ultra Light)</option>
+                        </optgroup>
+                        <optgroup label="Multilingual">
+                            <option value="exaone3.5:latest">exaone3.5:latest - EXAONE 3.5 (Korean/English)</option>
+                        </optgroup>
+                    </select>
+                    <p class="field-help">Select the model for AI-powered features. Different models excel at different tasks.</p>
+                </div>
+
+                <div class="form-group">
+                    <label>AI Temperature: <span id="temperatureValue">0.7</span></label>
+                    <input type="range" id="ollamaTemperature" min="0" max="1" step="0.1" value="0.7"
+                           oninput="document.getElementById('temperatureValue').textContent = this.value">
+                    <p class="field-help">
+                        Lower = More predictable/conservative, Higher = More creative/random
+                    </p>
+                </div>
+
+                <div class="connection-status-box" id="ollamaConnectionStatus" style="padding: 16px; border-radius: var(--radius-md); margin-top: 20px;">
+                    <div class="status-row" style="display: flex; align-items: center; gap: 12px;">
+                        <span id="ollamaStatusIndicator" style="font-size: 24px;">🟡</span>
+                        <div>
+                            <strong>Connection Status:</strong> <span id="ollamaStatusText">Testing...</span>
+                            <p style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+                                Test your connection before saving
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="model-info" style="margin-top: 20px; padding: 16px; background: var(--bg-secondary); border-radius: var(--radius-md);">
+                    <h4>📚 Model Quick Reference</h4>
+                    <div class="model-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 12px; font-size: 13px;">
+                        <div class="model-card" style="padding: 8px; background: var(--bg-tertiary); border-radius: var(--radius-sm);">
+                            <strong>llama3.2</strong> - General purpose, good balance
+                        </div>
+                        <div class="model-card" style="padding: 8px; background: var(--bg-tertiary); border-radius: var(--radius-sm);">
+                            <strong>qwen2.5</strong> - Excellent for coding tasks
+                        </div>
+                        <div class="model-card" style="padding: 8px; background: var(--bg-tertiary); border-radius: var(--radius-sm);">
+                            <strong>phi4-mini</strong> - Fast responses, lightweight
+                        </div>
+                        <div class="model-card" style="padding: 8px; background: var(--bg-tertiary); border-radius: var(--radius-sm);">
+                            <strong>deepcoder</strong> - Specialized code generation
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="testOllamaConnection()">
+                    🔄 Test Connection
+                </button>
+                <button class="btn-secondary" onclick="closeModal('ollamaCloudModal')">
+                    Cancel
+                </button>
+                <button class="btn-primary" onclick="saveOllamaCloudConfig()">
+                    💾 Save Configuration
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="js/vault-core.js"></script>
     <script src="js/vault-ui.js"></script>
@@ -416,6 +529,7 @@
     <script src="js/ai-variable-manager.js"></script>
     <script src="js/ai-deployment-pipeline.js"></script>
     <script src="js/ai-central-hub.js"></script>
+    <script src="js/ollama-cloud-integration.js"></script>
     <script src="js/vault-validation.js"></script>
     <script src="js/vault-logs.js"></script>
     <script src="js/vault-timeline.js"></script>
@@ -689,6 +803,81 @@
             bar.style.width = strength + '%';
             bar.style.background = length < 8 ? '#ef4444' : length < 12 ? '#f59e0b' : '#10b981';
         });
+
+        // Ollama Cloud Settings Functions
+        function showOllamaCloudSettings() {
+            // Load current config
+            const saved = localStorage.getItem('ollama_cloud_config');
+            if (saved) {
+                try {
+                    const config = JSON.parse(saved);
+                    document.getElementById('ollamaCloudUrl').value = config.baseUrl || 'https://ollama-cloud.reddgr.com';
+                    document.getElementById('ollamaCloudModel').value = config.defaultModel || 'llama3.2:latest';
+                    document.getElementById('ollamaTemperature').value = config.temperature || 0.7;
+                    document.getElementById('temperatureValue').textContent = config.temperature || 0.7;
+                } catch (e) {
+                    console.warn('Failed to load Ollama config');
+                }
+            }
+            
+            // Test connection on open
+            testOllamaConnection();
+            
+            document.getElementById('ollamaCloudModal').classList.remove('hidden');
+        }
+
+        async function testOllamaConnection() {
+            const statusIndicator = document.getElementById('ollamaStatusIndicator');
+            const statusText = document.getElementById('ollamaStatusText');
+            const statusBox = document.getElementById('ollamaConnectionStatus');
+            
+            statusIndicator.textContent = '🟡';
+            statusText.textContent = 'Testing...';
+            statusBox.style.background = 'var(--bg-tertiary)';
+            
+            const baseUrl = document.getElementById('ollamaCloudUrl').value || 'https://ollama-cloud.reddgr.com';
+            
+            try {
+                const response = await fetch(`${baseUrl}/api/tags`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (response.ok) {
+                    statusIndicator.textContent = '🟢';
+                    statusText.textContent = 'Connected';
+                    statusBox.style.background = 'rgba(34, 197, 94, 0.1)';
+                    VaultUI.showToast('Ollama Cloud connection successful', 'success');
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                statusIndicator.textContent = '🔴';
+                statusText.textContent = `Connection failed: ${error.message}`;
+                statusBox.style.background = 'rgba(239, 68, 68, 0.1)';
+                VaultUI.showToast('Ollama Cloud connection failed', 'error');
+            }
+        }
+
+        function saveOllamaCloudConfig() {
+            const config = {
+                baseUrl: document.getElementById('ollamaCloudUrl').value,
+                defaultModel: document.getElementById('ollamaCloudModel').value,
+                temperature: parseFloat(document.getElementById('ollamaTemperature').value)
+            };
+            
+            localStorage.setItem('ollama_cloud_config', JSON.stringify(config));
+            localStorage.setItem('ollama_cloud_url', config.baseUrl);
+            localStorage.setItem('ollama_default_model', config.defaultModel);
+            
+            // Update OllamaCloudIntegration if available
+            if (typeof OllamaCloudIntegration !== 'undefined') {
+                OllamaCloudIntegration.updateConfig(config);
+            }
+            
+            VaultUI.showToast('Ollama Cloud configuration saved', 'success');
+            closeModal('ollamaCloudModal');
+        }
     </script>
 </body>
 </html>

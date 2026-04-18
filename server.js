@@ -81,6 +81,10 @@ app.use('/api/ollama/', ollamaLimiter);
 const { initDatabase } = require('./database/database');
 const authRoutes = require('./routes/auth');
 const serviceRoutes = require('./routes/services');
+const WebSocketServer = require('./services/websocket-server');
+const WebhookHandler = require('./services/webhook-handler');
+const ServiceManager = require('./services/service-manager');
+const credentialVault = require('./services/credential-vault');
 
 // Initialize database on startup
 initDatabase().then(connected => {
@@ -401,6 +405,8 @@ app.listen(PORT, () => {
     console.log(`\nServer running on port ${PORT}`);
     console.log(`Health check: http://localhost:${PORT}/api/health`);
     console.log(`Auth API: http://localhost:${PORT}/api/auth`);
+    console.log(`WebSocket: ws://localhost:${PORT}/ws`);
+    console.log(`Webhooks: http://localhost:${PORT}/webhooks/railway/*`);
     
     if (OLLAMA_API_KEY) {
         console.log('\n✅ Ollama AI: CONFIGURED');
@@ -409,5 +415,27 @@ app.listen(PORT, () => {
         console.log('\n⚠️  Ollama AI: NOT CONFIGURED');
     }
     
-    console.log('\n✨ Ready for connections!\n');
+    console.log('\n✨ Central Hub is ready!\n');
+});
+
+// Initialize WebSocket server after HTTP server starts
+const server = app.listen(PORT, () => {
+    console.log(`[Server] HTTP server started on port ${PORT}`);
+    
+    // Initialize WebSocket server
+    const wsServer = new WebSocketServer(server);
+    
+    // Store globally for access in routes
+    global.wsServer = wsServer;
+    
+    // Initialize Webhook handler
+    const webhookHandler = new WebhookHandler(null, wsServer);
+    
+    // Mount webhook routes
+    app.post('/webhooks/railway/deployment', (req, res) => webhookHandler.handleDeployment(req, res));
+    app.post('/webhooks/railway/health', (req, res) => webhookHandler.handleHealth(req, res));
+    app.post('/webhooks/railway/variables', (req, res) => webhookHandler.handleVariables(req, res));
+    
+    console.log('[WebSocket] Server initialized');
+    console.log('[Webhooks] Routes mounted');
 });

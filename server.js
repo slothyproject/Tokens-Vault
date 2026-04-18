@@ -67,7 +67,8 @@ app.get('/api/ollama/tags', async (req, res) => {
     }
 
     try {
-        const response = await axios.get(`${OLLAMA_BASE_URL}/tags`, {
+        // Ollama Cloud uses OpenAI-compatible endpoint: /v1/models
+        const response = await axios.get(`${OLLAMA_BASE_URL}/models`, {
             headers: {
                 'Authorization': `Bearer ${OLLAMA_API_KEY}`,
                 'Content-Type': 'application/json'
@@ -109,17 +110,15 @@ app.post('/api/ollama/generate', async (req, res) => {
 
         console.log(`[Ollama] Generating with model: ${model}`);
 
+        // Ollama Cloud uses OpenAI-compatible endpoint: /v1/completions
         const response = await axios.post(
-            `${OLLAMA_BASE_URL}/generate`,
+            `${OLLAMA_BASE_URL}/completions`,
             {
-                model,
-                prompt,
-                stream,
-                options: {
-                    temperature: options.temperature ?? 0.7,
-                    num_ctx: options.num_ctx ?? 4096,
-                    ...options
-                }
+                model: model,
+                prompt: prompt,
+                stream: stream,
+                temperature: options.temperature ?? 0.7,
+                max_tokens: options.max_tokens ?? 2048
             },
             {
                 headers: {
@@ -165,17 +164,15 @@ app.post('/api/ollama/chat', async (req, res) => {
 
         console.log(`[Ollama] Chat with model: ${model}, messages: ${messages.length}`);
 
+        // Ollama Cloud uses OpenAI-compatible endpoint: /v1/chat/completions
         const response = await axios.post(
-            `${OLLAMA_BASE_URL}/chat`,
+            `${OLLAMA_BASE_URL}/chat/completions`,
             {
-                model,
-                messages,
-                stream,
-                options: {
-                    temperature: options.temperature ?? 0.7,
-                    num_ctx: options.num_ctx ?? 4096,
-                    ...options
-                }
+                model: model,
+                messages: messages,
+                stream: stream,
+                temperature: options.temperature ?? 0.7,
+                max_tokens: options.max_tokens ?? 2048
             },
             {
                 headers: {

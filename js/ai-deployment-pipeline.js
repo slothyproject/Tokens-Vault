@@ -567,17 +567,81 @@ const AIDeploymentPipeline = {
     },
     
     async showConfirmation(serviceId, deployment) {
-        // This would show a modal and return true/false
-        // For now, simulate user confirmation
-        return new Promise(resolve => {
-            // In real implementation, this would show a modal
-            // and wait for user response
-            console.log(`[AIDeploymentPipeline] Showing confirmation for ${serviceId}`);
+        // Create and show a real confirmation modal
+        return new Promise((resolve) => {
+            const modalId = `deploy-confirm-${serviceId}-${Date.now()}`;
             
-            // Simulate user always confirming for now
-            // In production, this would be a real modal
-            setTimeout(() => resolve(true), 100);
+            const modalHtml = `
+                <div id="${modalId}" class="modal">
+                    <div class="modal-overlay" data-action="cancel"></div>
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3>🚀 Confirm Deployment</h3>
+                            <button class="btn-close" data-action="cancel">✕</button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Are you sure you want to deploy <strong>${this.escapeHtml(serviceId)}</strong>?</p>
+                            <div class="deploy-preview">
+                                <h4>Changes:</h4>
+                                <ul>
+                                    ${deployment.changes.map(c => `<li>${this.escapeHtml(c.key || c)}: ${this.escapeHtml(c.old || 'none')} &rarr; ${this.escapeHtml(c.new || 'set')}</li>`).join('')}
+                                </ul>
+                            </div>
+                            <div class="deploy-warning">
+                                ⚠️ This will affect the live service
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn-secondary" data-action="cancel">Cancel</button>
+                            <button class="btn-primary" data-action="confirm">Deploy Now</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Insert modal
+            const temp = document.createElement('div');
+            temp.innerHTML = modalHtml;
+            const modal = temp.firstElementChild;
+            document.body.appendChild(modal);
+            
+            // Show modal
+            requestAnimationFrame(() => modal.classList.add('visible'));
+            
+            // Handle user choice
+            const handleChoice = (confirmed) => {
+                // Remove modal
+                modal.classList.remove('visible');
+                setTimeout(() => modal.remove(), 300);
+                resolve(confirmed);
+            };
+            
+            // Add event listeners
+            modal.querySelectorAll('[data-action="confirm"]').forEach(el => {
+                el.addEventListener('click', () => handleChoice(true));
+            });
+            
+            modal.querySelectorAll('[data-action="cancel"]').forEach(el => {
+                el.addEventListener('click', () => handleChoice(false));
+            });
+            
+            // Handle escape key
+            const handleEscape = (e) => {
+                if (e.key === 'Escape') {
+                    handleChoice(false);
+                    document.removeEventListener('keydown', handleEscape);
+                }
+            };
+            document.addEventListener('keydown', handleEscape);
         });
+    },
+    
+    // Helper: Escape HTML
+    escapeHtml(text) {
+        if (text == null) return '';
+        const div = document.createElement('div');
+        div.textContent = String(text);
+        return div.innerHTML;
     },
     
     async runSmokeTests(serviceId, environment) {

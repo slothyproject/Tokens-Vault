@@ -893,11 +893,12 @@ const VaultUI = {
         if (welcomeScreen) welcomeScreen.classList.add('hidden');
         if (serviceContent) {
             serviceContent.classList.remove('hidden');
+            const escapedMessage = this.escapeHtml(message);
             serviceContent.innerHTML = `
                 <div class="error-state">
                     <div class="error-icon">⚠️</div>
                     <h3>Error Loading Service</h3>
-                    <p>${message}</p>
+                    <p>${escapedMessage}</p>
                     <div class="error-actions">
                         <button class="btn-primary" onclick="location.reload()">
                             🔄 Refresh Page
@@ -1313,7 +1314,7 @@ const VaultUI = {
     
     // Escape special regex characters
     escapeRegExp(string) {
-        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\\\$&');
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     },
     
     // Truncate long values

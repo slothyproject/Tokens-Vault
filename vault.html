@@ -514,19 +514,30 @@
     </div>
 
     <!-- Scripts -->
+    <!-- Core Dependencies (must load first) -->
     <script src="js/vault-core.js"></script>
+    <script src="js/ai-security-utils.js"></script>
+    <script src="js/ai-storage-manager.js"></script>
+    <script src="js/ai-event-bus.js"></script>
+    <script src="js/ai-module-loader.js"></script>
+    
+    <!-- Core UI -->
     <script src="js/vault-ui.js"></script>
     <script src="js/vault-intelligence.js"></script>
     <script src="js/vault-deploy.js"></script>
     <script src="js/vault-health.js"></script>
     <script src="js/vault-discord.js"></script>
     <script src="js/vault-backup.js"></script>
+    
+    <!-- Services -->
     <script src="js/unified-services.js"></script>
     <script src="js/vault-railway-api.js"></script>
     <script src="js/vault-railway-sync.js"></script>
     <script src="js/vault-railway-deploy.js"></script>
     <script src="js/vault-unified-sync.js"></script>
     <script src="js/vault-central-hub.js"></script>
+    
+    <!-- AI Modules -->
     <script src="js/ai-variable-manager.js"></script>
     <script src="js/ai-deployment-pipeline.js"></script>
     <script src="js/ai-central-hub.js"></script>

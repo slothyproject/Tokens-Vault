@@ -608,17 +608,21 @@ const AIVariableManager = {
         };
     },
     
-    // Generate secure value
+    // Generate secure value using cryptographically secure randomness
     generateSecureValue(variable) {
         const length = variable.minLength || 32;
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-        let result = '';
+        const result = new Array(length);
+        const randomValues = new Uint32Array(length);
+        
+        // Use cryptographically secure random number generator
+        crypto.getRandomValues(randomValues);
         
         for (let i = 0; i < length; i++) {
-            result += chars.charAt(Math.floor(Math.random() * chars.length));
+            result[i] = chars[randomValues[i] % chars.length];
         }
         
-        return result;
+        return result.join('');
     },
     
     // ============================================

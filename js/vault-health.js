@@ -322,17 +322,15 @@ const VaultHealth = {
         VaultUI.showToast(`Redeploying ${serviceId}...`, 'info');
 
         try {
-            // Use existing Railway API if available
-            if (typeof RailwayAPI !== 'undefined') {
-                const api = new RailwayAPI(vaultData.railwayToken);
-                const service = this.config.services.find(s => s.id === serviceId);
-                if (service) {
-                    await api.deployService(service.railwayService || serviceId);
+            // Use VaultRailwayDeploy if available
+            if (typeof VaultRailwayDeploy !== 'undefined') {
+                const result = await VaultRailwayDeploy.deployService(serviceId);
+                if (result.success) {
                     VaultUI.showToast(`${serviceId} redeployed successfully`, 'success');
                     this.checkAllHealth();
                 }
             } else {
-                VaultUI.showToast('Railway API not available', 'error');
+                VaultUI.showToast('Railway deployment module not available', 'error');
             }
         } catch (error) {
             console.error('[VaultHealth] Redeploy failed:', error);

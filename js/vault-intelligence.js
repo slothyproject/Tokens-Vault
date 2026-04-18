@@ -247,14 +247,20 @@ const VaultIntelligence = {
         };
     },
 
-    // Generate secure random token
+    // Generate secure random token using cryptographically secure randomness
     generateSecureToken(length = 32) {
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-        let result = '';
+        const result = new Array(length);
+        const randomValues = new Uint32Array(length);
+        
+        // Use cryptographically secure random number generator
+        crypto.getRandomValues(randomValues);
+        
         for (let i = 0; i < length; i++) {
-            result += chars.charAt(Math.floor(Math.random() * chars.length));
+            result[i] = chars[randomValues[i] % chars.length];
         }
-        return result;
+        
+        return result.join('');
     },
 
     // Generate JWT secret (base64 encoded random bytes)

@@ -406,7 +406,7 @@ const AIDeploymentPipeline = {
     // AUTO-HEAL SYSTEM
     // ============================================
     
-    async attemptAutoHeal(serviceId, deployment, error) {
+    async attemptAutoHeal(serviceId, deployment, error, originalOptions = {}) {
         console.log(`[AIDeploymentPipeline] Attempting auto-heal for ${serviceId}`);
         
         const healActions = [];
@@ -425,7 +425,7 @@ const AIDeploymentPipeline = {
                     
                     // Retry deployment
                     return this.deploy(serviceId, { 
-                        ...options, 
+                        ...originalOptions, 
                         skipConfirmation: true,
                         autoHeal: false // Prevent infinite loop
                     });
@@ -450,7 +450,7 @@ const AIDeploymentPipeline = {
             // Wait and retry
             await this.simulateDelay(10000);
             return this.deploy(serviceId, { 
-                ...options, 
+                ...originalOptions, 
                 skipConfirmation: true,
                 autoHeal: false
             });
@@ -464,7 +464,7 @@ const AIDeploymentPipeline = {
             this.log(deployment, '🔧 Auto-healed: Cleared caches');
             
             return this.deploy(serviceId, { 
-                ...options, 
+                ...originalOptions, 
                 skipConfirmation: true,
                 autoHeal: false
             });

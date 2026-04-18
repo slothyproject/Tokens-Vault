@@ -26,12 +26,12 @@
             </div>
 
             <!-- Quick Search Button -->
-            <button class="btn-icon" onclick="VaultUI.openQuickSearch()" title="Quick Search (Ctrl+K)">
+            <button class="btn-icon" onclick="VaultUI.openQuickSearch()" title="Quick Search (Ctrl+K)" aria-label="Quick Search">
                 🔍
             </button>
 
             <!-- Keyboard Shortcuts -->
-            <button class="btn-icon" onclick="showKeyboardShortcuts()" title="Keyboard Shortcuts (Ctrl+/)">
+            <button class="btn-icon" onclick="showKeyboardShortcuts()" title="Keyboard Shortcuts (Ctrl+/)" aria-label="Keyboard Shortcuts">
                 ⌨️
             </button>
 
@@ -40,27 +40,27 @@
                 <span>Synced</span>
             </div>
 
-            <button class="btn-icon" onclick="VaultUI.showAICentralHub()" title="AI Central Hub (Intelligent Service Management)">
+            <button class="btn-icon" onclick="VaultUI.showAICentralHub()" title="AI Central Hub" aria-label="AI Central Hub">
                 🤖
             </button>
 
-            <button class="btn-icon" onclick="showOllamaCloudSettings()" title="Ollama Cloud AI Models">
+            <button class="btn-icon" onclick="showOllamaCloudSettings()" title="Ollama Cloud AI Models" aria-label="Ollama Cloud Settings">
                 🧠
             </button>
 
-            <button class="btn-icon" onclick="showSettings()" title="Settings">
+            <button class="btn-icon" onclick="showSettings()" title="Settings" aria-label="Settings">
                 ⚙️
             </button>
 
-            <button class="btn-icon" onclick="VaultUI.showTemplateModal()" title="Apply Template">
+            <button class="btn-icon" onclick="VaultUI.showTemplateModal()" title="Apply Template" aria-label="Apply Template">
                 📋
             </button>
 
-            <button class="btn-icon" onclick="VaultRailwayDeploy.deployAll({ showPreview: true })" title="Deploy All Services">
+            <button class="btn-icon" onclick="VaultRailwayDeploy.deployAll({ showPreview: true })" title="Deploy All Services" aria-label="Deploy All">
                 🚀
             </button>
 
-            <button class="btn-icon" onclick="lockVault()" title="Lock (Ctrl+L)">
+            <button class="btn-icon" onclick="lockVault()" title="Lock (Ctrl+L)" aria-label="Lock Vault">
                 🔒
             </button>
         </div>
@@ -522,6 +522,7 @@
     <script src="js/vault-discord.js"></script>
     <script src="js/vault-backup.js"></script>
     <script src="js/unified-services.js"></script>
+    <script src="js/vault-railway-api.js"></script>
     <script src="js/vault-railway-sync.js"></script>
     <script src="js/vault-railway-deploy.js"></script>
     <script src="js/vault-unified-sync.js"></script>

@@ -213,7 +213,7 @@ const VaultUI = {
                         <button class="btn-secondary" onclick="VaultUI.viewLogs('${serviceId}')" title="View Live Logs">
                             📋 View Logs
                         </button>
-                        <button class="btn-primary" onclick="VaultUI.deployService('${serviceId}'">
+                        <button class="btn-primary" onclick="VaultUI.deployService('${serviceId}')">
                             🚀 Deploy to Railway
                         </button>
                     </div>
@@ -617,6 +617,7 @@ const VaultUI = {
         let totalServices = 0;
         let successCount = 0;
         let failCount = 0;
+        const allServices = []; // Collect all services from each sync
 
         // Sync each variable to all its services
         for (const [key, value] of variables) {
@@ -628,6 +629,7 @@ const VaultUI = {
                 totalServices += result.services.length;
                 successCount += result.summary?.success || 0;
                 failCount += result.summary?.failed || 0;
+                allServices.push(...result.services); // Collect services
             }
         }
 
@@ -644,7 +646,7 @@ const VaultUI = {
         }
 
         // Show detailed summary modal
-        VaultUnifiedSync.showDeploySummary(result.services || []);
+        VaultUnifiedSync.showDeploySummary(allServices || []);
     },
 
     async deployService(serviceId) {
@@ -1268,17 +1270,17 @@ const VaultUI = {
             const service = this.servicesConfig.services.find(s => s.id === serviceId);
             html += `
                 <div class="search-service-group">
-                    <div class="search-service-header">${service?.name || serviceId}</div>
+                    <div class="search-service-header">${this.escapeHtml(service?.name || serviceId)}</div>
                     ${variables.map((v, index) => `
                         <div class="search-result-item" 
-                             data-service-id="${v.serviceId}" 
-                             data-variable="${v.key}"
+                             data-service-id="${this.escapeHtml(v.serviceId)}" 
+                             data-variable="${this.escapeHtml(v.key)}"
                              tabindex="0">
                             <div class="search-result-key">${this.highlightMatch(v.key, query)}</div>
                             <div class="search-result-value">
                                 ${v.isSecret ? '••••••••' : this.escapeHtml(this.truncateValue(v.value))}
                             </div>
-                            ${v.description ? `<div class="search-result-desc">${v.description}</div>` : ''}
+                            ${v.description ? `<div class="search-result-desc">${this.escapeHtml(v.description)}</div>` : ''}
                         </div>
                     `).join('')}
                 </div>
@@ -1301,11 +1303,17 @@ const VaultUI = {
         if (firstItem) firstItem.classList.add('selected');
     },
     
-    // Highlight matching text
+    // Highlight matching text (with XSS protection)
     highlightMatch(text, query) {
-        if (!query) return text;
-        const regex = new RegExp(`(${query})`, 'gi');
-        return text.replace(regex, '<mark>$1</mark>');
+        if (!query) return this.escapeHtml(text);
+        const escaped = this.escapeHtml(text);
+        const regex = new RegExp(`(${this.escapeRegExp(query)})`, 'gi');
+        return escaped.replace(regex, '<mark>$1</mark>');
+    },
+    
+    // Escape special regex characters
+    escapeRegExp(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\\\$&');
     },
     
     // Truncate long values

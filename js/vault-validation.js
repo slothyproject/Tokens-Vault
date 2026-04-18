@@ -395,7 +395,10 @@ const VaultValidation = {
     },
     
     // Show validation summary modal
-    showValidationSummary(validationResult) {
+    showValidationSummary(validationResult, serviceId) {
+        // Store the serviceId for later use
+        this.currentServiceId = serviceId;
+        
         const html = `
             <div class="modal validation-summary-modal" id="validationSummaryModal">
                 <div class="modal-overlay" onclick="VaultValidation.closeSummary()"></div>

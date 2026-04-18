@@ -30,11 +30,12 @@ const VaultRailwaySync = {
             return null;
         }
         
-        // Use existing RailwayAPI class if available
+        // Use RailwayAPI class if available
         if (typeof RailwayAPI !== 'undefined') {
             return new RailwayAPI(vaultData.railwayToken);
         }
         
+        VaultUI.showToast('Railway API module not loaded', 'error');
         return null;
     },
 

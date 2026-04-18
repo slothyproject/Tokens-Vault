@@ -64,7 +64,22 @@ const AICentralHub = {
     
     // Load and understand all services
     loadServices() {
-        if (typeof unifiedServices !== 'undefined') {
+        // Guard: Check if unifiedServices is available
+        if (typeof unifiedServices === 'undefined') {
+            console.error('[AICentralHub] unifiedServices not loaded. Creating fallback services.');
+            // Create minimal fallback services
+            this.services = {
+                'dissident-bot': { id: 'dissident-bot', name: 'Discord Bot', icon: '🤖', type: 'discord-bot' },
+                'dissident-website': { id: 'dissident-website', name: 'Website', icon: '🌐', type: 'static' },
+                'dissident-api-backend': { id: 'dissident-api-backend', name: 'API Backend', icon: '⚙️', type: 'node' },
+                'dissident-tokens-vault': { id: 'dissident-tokens-vault', name: 'Token Vault', icon: '🔐', type: 'static' },
+                'dissident-postgres': { id: 'dissident-postgres', name: 'PostgreSQL', icon: '🐘', type: 'database' },
+                'dissident-redis': { id: 'dissident-redis', name: 'Redis', icon: '🔴', type: 'redis' },
+                'dissident-website-data': { id: 'dissident-website-data', name: 'Website Data', icon: '💾', type: 'database' }
+            };
+            // Show warning
+            console.warn('[AICentralHub] Using fallback service definitions. Some features may be limited.');
+        } else {
             this.services = unifiedServices.services;
             console.log(`[AI Hub] Loaded ${Object.keys(this.services).length} services for intelligent management`);
         }
@@ -554,7 +569,17 @@ const AICentralHub = {
     // Render AI Dashboard
     render() {
         const container = document.getElementById('aiCentralHub');
-        if (!container) return;
+        if (!container) {
+            console.error('[AI Hub] aiCentralHub container not found');
+            return;
+        }
+        
+        // Guard: Check if services loaded
+        if (!this.services || Object.keys(this.services).length === 0) {
+            console.error('[AI Hub] No services loaded');
+            this.renderErrorState(container, 'No services configured. Check console for errors.');
+            return;
+        }
         
         container.innerHTML = `
             <div class="ai-hub-container">
@@ -598,6 +623,20 @@ const AICentralHub = {
                 <div class="ai-hub-content" id="aiHubContent">
                     ${this.renderDashboardTab()}
                 </div>
+            </div>
+        `;
+    },
+    
+    // Render error state when things go wrong
+    renderErrorState(container, message) {
+        container.innerHTML = `
+            <div class="ai-hub-error" style="padding: 40px; text-align: center; background: var(--bg-secondary); border-radius: var(--radius-lg); margin: 20px;">
+                <h2 style="color: var(--accent-red); margin-bottom: 16px;">⚠️ AI Hub Error</h2>
+                <p style="margin-bottom: 24px; color: var(--text-secondary);">${message}</p>
+                <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 24px;">
+                    Check browser console (F12) for details
+                </p>
+                <button class="btn-primary" onclick="location.reload()">🔄 Refresh Page</button>
             </div>
         `;
     },

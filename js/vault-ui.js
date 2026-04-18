@@ -2023,8 +2023,13 @@ const VaultUI = {
         console.log('[VaultUI] Opening AI Central Hub...');
 
         // Hide other views
-        document.getElementById('welcomeScreen')?.classList.add('hidden');
-        document.getElementById('serviceContent')?.classList.add('hidden');
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        const serviceContent = document.getElementById('serviceContent');
+        const centralHub = document.getElementById('centralHub');
+        
+        if (welcomeScreen) welcomeScreen.classList.add('hidden');
+        if (serviceContent) serviceContent.classList.add('hidden');
+        if (centralHub) centralHub.classList.add('hidden');
 
         // Deselect current service
         this.currentService = null;
@@ -2037,8 +2042,28 @@ const VaultUI = {
 
             // Initialize AI hub
             if (typeof AICentralHub !== 'undefined') {
-                AICentralHub.init();
+                if (!AICentralHub.state || !AICentralHub.state.initialized) {
+                    AICentralHub.init();
+                }
+            } else {
+                console.error('[VaultUI] AICentralHub not loaded');
+                hub.innerHTML = `
+                    <div style="padding: 40px; text-align: center;">
+                        <h2>⚠️ AI Central Hub Not Available</h2>
+                        <p>The AI Central Hub module failed to load.</p>
+                        <p>This usually means the JavaScript files weren't deployed correctly.</p>
+                        <br>
+                        <button class="btn-primary" onclick="location.reload()">🔄 Refresh Page</button>
+                        <br><br>
+                        <p style="font-size: 12px; color: var(--text-secondary);">
+                            Check browser console for errors (F12)
+                        </p>
+                    </div>
+                `;
             }
+        } else {
+            console.error('[VaultUI] aiCentralHub element not found');
+            this.showToast('Hub container not found', 'error');
         }
 
         // Update page title

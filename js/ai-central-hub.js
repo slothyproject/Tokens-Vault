@@ -1126,6 +1126,7 @@ const AICentralHub = {
             this.switchTab('settings'); // Refresh to show status
         }
     }
+};
 
 // Initialize when DOM is ready
 if (document.readyState === 'loading') {

@@ -1074,7 +1074,7 @@ const AICentralHub = {
                             </div>
                             <div>
                                 <span style="color: var(--accent-blue);">OLLAMA_BASE_URL</span>=
-                                <span style="color: var(--text-muted);">https://ollama.com/api</span>
+                                <span style="color: var(--text-muted);">https://api.ollama.com/v1</span>
                             </div>
                         </div>
                         

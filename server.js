@@ -16,7 +16,7 @@ const PORT = process.env.PORT || 8080;
 
 // Ollama Cloud Configuration
 const OLLAMA_API_KEY = process.env.OLLAMA_API_KEY;
-const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'https://ollama.com/api';
+const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'https://api.ollama.com/v1';
 
 // Validate API key on startup
 if (!OLLAMA_API_KEY) {

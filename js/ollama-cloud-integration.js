@@ -293,7 +293,7 @@ Respond in JSON format:
         const model = options.model || this.config.defaultModel;
         
         try {
-            const response = await fetch(`${this.config.baseUrl}/api/chat`, {
+            const response = await fetch(`${this.config.baseUrl}/chat`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

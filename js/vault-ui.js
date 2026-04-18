@@ -2016,6 +2016,33 @@ const VaultUI = {
     closeBulkEditModal() {
         const modal = document.getElementById('bulkEditModal');
         if (modal) modal.classList.add('hidden');
+    },
+
+    // Show Central Hub Dashboard
+    showCentralHub() {
+        console.log('[VaultUI] Opening Central Hub...');
+
+        // Hide other views
+        document.getElementById('welcomeScreen')?.classList.add('hidden');
+        document.getElementById('serviceContent')?.classList.add('hidden');
+
+        // Deselect current service
+        this.currentService = null;
+        this.renderServices();
+
+        // Show hub
+        const hub = document.getElementById('centralHub');
+        if (hub) {
+            hub.classList.remove('hidden');
+
+            // Initialize hub if available
+            if (typeof VaultCentralHub !== 'undefined') {
+                VaultCentralHub.init();
+            }
+        }
+
+        // Update page title
+        document.title = 'Central Hub - Dissident Vault';
     }
 };
 

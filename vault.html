@@ -6,6 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Dissident Token Vault v3.0</title>
     <link rel="stylesheet" href="css/vault.css">
+    <link rel="stylesheet" href="css/central-hub.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 </head>
 <body class="vault-page">
@@ -38,6 +39,10 @@
                 <span class="status-dot online"></span>
                 <span>Synced</span>
             </div>
+
+            <button class="btn-icon" onclick="VaultUI.showCentralHub()" title="Central Hub (Command Center)">
+                🎛️
+            </button>
 
             <button class="btn-icon" onclick="showSettings()" title="Settings">
                 ⚙️
@@ -140,6 +145,11 @@
 
             <div id="serviceContent" class="service-content hidden">
                 <!-- Service content loaded dynamically -->
+            </div>
+
+            <!-- Central Hub Dashboard -->
+            <div id="centralHub" class="hub-container hidden">
+                <!-- Central Hub content rendered by vault-central-hub.js -->
             </div>
         </main>
     </div>
@@ -402,6 +412,8 @@
     <script src="js/vault-railway-sync.js"></script>
     <script src="js/vault-railway-deploy.js"></script>
     <script src="js/vault-unified-sync.js"></script>
+    <script src="js/vault-central-hub.js"></script>
+    <script src="js/vault-validation.js"></script>
     <script src="js/vault-logs.js"></script>
     <script src="js/vault-timeline.js"></script>
 

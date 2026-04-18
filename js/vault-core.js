@@ -401,7 +401,7 @@ const VaultCore = {
         }
     },
 
-    // Unlock existing vault
+    // Unlock existing vault with backward compatibility
     unlock(password) {
         if (!password) {
             return { success: false, error: 'Password required' };
@@ -418,14 +418,43 @@ const VaultCore = {
                 return { success: false, error: 'Invalid vault metadata' };
             }
 
-            const key = CryptoJS.PBKDF2(password, meta.salt, { 
+            let key, keyHash;
+            let usedIterations = 100000;
+            let isLegacy = false;
+
+            // Try new secure format first (100,000 iterations)
+            key = CryptoJS.PBKDF2(password, meta.salt, { 
                 keySize: 256/32, 
                 iterations: 100000 
             });
-            const keyHash = CryptoJS.SHA256(key.toString()).toString();
+            keyHash = CryptoJS.SHA256(key.toString()).toString();
 
-            if (keyHash !== meta.keyHash) {
-                return { success: false, error: 'Invalid password' };
+            // Check if matches new format
+            if (keyHash === meta.keyHash) {
+                console.log('[VaultCore] Unlocked with enhanced security (100k iterations)');
+                usedIterations = 100000;
+                isLegacy = false;
+            } else {
+                // Try legacy format (10,000 iterations) for backward compatibility
+                console.log('[VaultCore] New format failed, trying legacy format...');
+                
+                key = CryptoJS.PBKDF2(password, meta.salt, { 
+                    keySize: 256/32, 
+                    iterations: 10000 
+                });
+                keyHash = CryptoJS.SHA256(key.toString()).toString();
+
+                if (keyHash === meta.keyHash) {
+                    console.log('[VaultCore] Unlocked with legacy format (10k iterations)');
+                    usedIterations = 10000;
+                    isLegacy = true;
+                    
+                    // Optionally upgrade to new format on successful unlock
+                    // This happens automatically on next save
+                } else {
+                    // Neither worked - wrong password
+                    return { success: false, error: 'Invalid password' };
+                }
             }
 
             this.setSessionKey(key.toString());
@@ -434,7 +463,19 @@ const VaultCore = {
             meta.lastAccessed = new Date().toISOString();
             this.safeSet('dissident_vault_meta', JSON.stringify(meta), 'local');
 
-            return { success: true, data: this.loadVaultData() };
+            const result = { 
+                success: true, 
+                data: this.loadVaultData(),
+                security: isLegacy ? 'legacy' : 'enhanced',
+                iterations: usedIterations
+            };
+
+            if (isLegacy) {
+                console.log('[VaultCore] Note: Vault is using legacy security. Consider re-saving to upgrade.');
+            }
+
+            return result;
+            
         } catch (e) {
             console.error('Unlock failed:', e);
             return { success: false, error: 'Unlock failed: ' + e.message };

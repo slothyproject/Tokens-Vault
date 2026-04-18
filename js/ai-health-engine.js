@@ -44,38 +44,40 @@ const AIHealthEngine = {
     },
     
     // Service definitions with real endpoints
+    // These URLs will be auto-configured by SETUP_AI_AGENT.bat
     serviceDefinitions: {
         'dissident-website': {
             name: 'Dissident Website',
-            url: 'https://dissident.example.com',
+            url: 'https://YOUR-DOMAIN.com',  // CONFIGURE THIS
             healthEndpoint: '/health',
             type: 'web',
-            dependencies: ['dissident-api-backend'],
+            dependencies: ['postgresql', 'redis'],
             critical: true,
-            sslDomain: 'dissident.example.com',
+            sslDomain: 'YOUR-DOMAIN.com',  // CONFIGURE THIS
             expectedStatus: 200,
             timeout: 10000,
             retries: 3
         },
         'dissident-api-backend': {
             name: 'API Backend',
-            url: 'https://api.dissident.example.com',
+            url: 'https://api.YOUR-DOMAIN.com',  // CONFIGURE THIS
             healthEndpoint: '/health',
             type: 'api',
             dependencies: ['postgresql', 'redis'],
             critical: true,
-            sslDomain: 'api.dissident.example.com',
+            sslDomain: 'api.YOUR-DOMAIN.com',  // CONFIGURE THIS
             expectedStatus: 200,
             timeout: 10000,
             retries: 3
         },
         'dissident-bot': {
             name: 'Discord Bot',
-            url: 'https://railway.app/project/resplendent-fulfillment', // Railway dashboard
+            url: 'https://railway.app/project/resplendent-fulfillment',
             type: 'bot',
             dependencies: ['postgresql', 'discord-api'],
             critical: true,
-            healthCheckType: 'railway', // Special check via Railway API
+            healthCheckType: 'railway',
+            railwayService: 'YOUR-RAILWAY-SERVICE-NAME',  // CONFIGURE THIS (e.g., dissident-bot)
             timeout: 15000,
             retries: 3
         },

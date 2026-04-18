@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Dissident Token Vault v3.0</title>
+    <title>AI Central Hub | Intelligent Service Management</title>
     <link rel="stylesheet" href="css/vault.css">
     <link rel="stylesheet" href="css/central-hub.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
@@ -13,9 +13,9 @@
     <!-- Navigation -->
     <nav class="navbar">
         <div class="nav-brand">
-            <span class="logo-icon">🔐</span>
-            <span class="brand-text">Dissident<span class="gradient">Vault</span></span>
-            <span class="version">v3.0</span>
+            <span class="logo-icon">🤖</span>
+            <span class="brand-text">AI<span class="gradient">Hub</span></span>
+            <span class="version">v3.1</span>
         </div>
 
         <div class="nav-actions">
@@ -40,8 +40,8 @@
                 <span>Synced</span>
             </div>
 
-            <button class="btn-icon" onclick="VaultUI.showCentralHub()" title="Central Hub (Command Center)">
-                🎛️
+            <button class="btn-icon" onclick="VaultUI.showAICentralHub()" title="AI Central Hub (Intelligent Service Management)">
+                🤖
             </button>
 
             <button class="btn-icon" onclick="showSettings()" title="Settings">
@@ -98,34 +98,34 @@
 
             <div id="welcomeScreen" class="welcome-screen">
                 <div class="welcome-card">
-                    <div class="welcome-icon">🔐</div>
-                    <h1>Welcome to Token Vault v3.0</h1>
-                    <p>Select a service from the sidebar to manage its secrets</p>
+                    <div class="welcome-icon">🤖</div>
+                    <h1>Welcome to AI Central Hub v3.1</h1>
+                    <p>Intelligent service management and monitoring</p>
 
                     <div class="features">
                         <div class="feature">
-                            <span class="feature-icon">🔒</span>
-                            <span>AES-256 Encryption</span>
+                            <span class="feature-icon">🤖</span>
+                            <span>AI-Powered Management</span>
                         </div>
                         <div class="feature">
-                            <span class="feature-icon">🔄</span>
-                            <span>GitHub Auto-Sync</span>
+                            <span class="feature-icon">🎛️</span>
+                            <span>Central Command Center</span>
+                        </div>
+                        <div class="feature">
+                            <span class="feature-icon">❤️</span>
+                            <span>Health Monitoring</span>
+                        </div>
+                        <div class="feature">
+                            <span class="feature-icon">💡</span>
+                            <span>Smart Recommendations</span>
+                        </div>
+                        <div class="feature">
+                            <span class="feature-icon">🔮</span>
+                            <span>Predictive Analytics</span>
                         </div>
                         <div class="feature">
                             <span class="feature-icon">🚀</span>
-                            <span>Railway Deployment</span>
-                        </div>
-                        <div class="feature">
-                            <span class="feature-icon">🔍</span>
-                            <span>Quick Search (Ctrl+K)</span>
-                        </div>
-                        <div class="feature">
-                            <span class="feature-icon">💾</span>
-                            <span>Encrypted Backups</span>
-                        </div>
-                        <div class="feature">
-                            <span class="feature-icon">⏱️</span>
-                            <span>Session Timeout</span>
+                            <span>Auto-Deploy</span>
                         </div>
                     </div>
 
@@ -135,8 +135,8 @@
                     </div>
                     
                     <div class="quick-start-actions">
-                        <button class="btn-primary btn-large" onclick="VaultUI.showQuickAddModal()">
-                            ➕ Add Your First Variable
+                        <button class="btn-primary btn-large" onclick="VaultUI.showAICentralHub()">
+                            🎛️ Open AI Central Hub
                         </button>
                         <p class="quick-start-hint">Or select a service from the sidebar</p>
                     </div>
@@ -147,8 +147,8 @@
                 <!-- Service content loaded dynamically -->
             </div>
 
-            <!-- Central Hub Dashboard -->
-            <div id="centralHub" class="hub-container hidden">
+            <!-- AI Central Hub Dashboard -->
+            <div id="aiCentralHub" class="hub-container hidden">
                 <!-- Central Hub content rendered by vault-central-hub.js -->
             </div>
         </main>
@@ -413,6 +413,7 @@
     <script src="js/vault-railway-deploy.js"></script>
     <script src="js/vault-unified-sync.js"></script>
     <script src="js/vault-central-hub.js"></script>
+    <script src="js/ai-central-hub.js"></script>
     <script src="js/vault-validation.js"></script>
     <script src="js/vault-logs.js"></script>
     <script src="js/vault-timeline.js"></script>

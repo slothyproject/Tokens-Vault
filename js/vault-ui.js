@@ -2018,9 +2018,9 @@ const VaultUI = {
         if (modal) modal.classList.add('hidden');
     },
 
-    // Show Central Hub Dashboard
-    showCentralHub() {
-        console.log('[VaultUI] Opening Central Hub...');
+    // Show AI Central Hub
+    showAICentralHub() {
+        console.log('[VaultUI] Opening AI Central Hub...');
 
         // Hide other views
         document.getElementById('welcomeScreen')?.classList.add('hidden');
@@ -2030,19 +2030,24 @@ const VaultUI = {
         this.currentService = null;
         this.renderServices();
 
-        // Show hub
-        const hub = document.getElementById('centralHub');
+        // Show AI hub
+        const hub = document.getElementById('aiCentralHub');
         if (hub) {
             hub.classList.remove('hidden');
 
-            // Initialize hub if available
-            if (typeof VaultCentralHub !== 'undefined') {
-                VaultCentralHub.init();
+            // Initialize AI hub
+            if (typeof AICentralHub !== 'undefined') {
+                AICentralHub.init();
             }
         }
 
         // Update page title
-        document.title = 'Central Hub - Dissident Vault';
+        document.title = 'AI Central Hub - Intelligent Service Management';
+    },
+
+    // Legacy support
+    showCentralHub() {
+        this.showAICentralHub();
     }
 };
 

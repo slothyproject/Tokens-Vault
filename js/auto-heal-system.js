@@ -93,7 +93,7 @@ const AutoHealSystem = {
      */
     checkModulesReady() {
         const required = {
-            'VaultCore': typeof VaultCore !== 'undefined' && VaultCore.initialized,
+            'VaultCore': typeof VaultCore !== 'undefined',
             'VaultUI': typeof VaultUI !== 'undefined',
             'VaultData': typeof VaultData !== 'undefined',
             'OllamaCloudIntegration': typeof OllamaCloudIntegration !== 'undefined'

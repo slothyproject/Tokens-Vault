@@ -651,7 +651,59 @@ Generate a fix configuration. Response format:
     sleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
     },
-    
+
+    /**
+     * Handle health status updates
+     */
+    handleHealthUpdate(detail) {
+        if (!detail) return;
+        console.log('[AIHealingEngine] Health update received:', detail);
+
+        // Process health updates
+        if (detail.status === 'unhealthy' && detail.serviceId) {
+            this.handleIssue({
+                type: detail.issueType || 'health_degraded',
+                serviceId: detail.serviceId,
+                severity: detail.severity || 'warning',
+                timestamp: new Date().toISOString(),
+                details: detail
+            });
+        }
+    },
+
+    /**
+     * Suggest a fix for an issue
+     */
+    async suggestFix(issue) {
+        console.log('[AIHealingEngine] Suggesting fix for:', issue.type);
+
+        const playbook = this.playbooks[issue.type];
+        if (!playbook) {
+            return {
+                success: false,
+                error: 'No playbook available for this issue type'
+            };
+        }
+
+        // Get suggested actions from playbook
+        const suggestions = playbook.actions
+            .filter(action => !action.auto)
+            .map(action => ({
+                step: action.step,
+                description: action.description,
+                confidence: playbook.confidence
+            }));
+
+        return {
+            success: true,
+            issue: issue,
+            playbook: playbook.name,
+            confidence: playbook.confidence,
+            suggestions: suggestions,
+                requiresApproval: playbook.confidence < this.config.autoHealConfidence
+        };
+    },
+
     // Placeholder implementations
     async verifyNotMaintenance(issue) { return { inMaintenance: false }; },
     async checkPlatformStatus(issue) { return { status: 'operational' }; },

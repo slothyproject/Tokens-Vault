@@ -618,6 +618,9 @@ const AICentralHub = {
                     <button class="ai-tab" onclick="AICentralHub.switchTab('command')">
                         ⌨️ Command
                     </button>
+                    <button class="ai-tab" onclick="AICentralHub.switchTab('settings')">
+                        ⚙️ Settings
+                    </button>
                 </div>
                 
                 <div class="ai-hub-content" id="aiHubContent">
@@ -774,6 +777,9 @@ const AICentralHub = {
                 break;
             case 'command':
                 content.innerHTML = this.renderCommandTab();
+                break;
+            case 'settings':
+                content.innerHTML = this.renderSettingsTab();
                 break;
         }
     },
@@ -1015,8 +1021,111 @@ const AICentralHub = {
     
     updateAnalysisDisplay() {
         // Would update analysis displays
+    },
+    
+    // Render Settings Tab with Ollama Configuration
+    renderSettingsTab() {
+        // Check Ollama connection status
+        const ollamaStatus = OllamaCloudIntegration?.state?.connected ? 
+            { status: 'connected', color: '#22c55e', icon: '✅' } : 
+            { status: 'disconnected', color: '#ef4444', icon: '❌' };
+        
+        // Get current model from Ollama config
+        const currentModel = OllamaCloudIntegration?.config?.defaultModel || 'llama3.2:latest';
+        
+        return `
+            <div class="ai-settings">
+                <h3>⚙️ AI Settings & Configuration</h3>
+                
+                <!-- Ollama Cloud Configuration -->
+                <div class="settings-section">
+                    <h4>🦙 Ollama Cloud AI</h4>
+                    <div class="ollama-status" style="background: ${ollamaStatus.color}20; border-left: 4px solid ${ollamaStatus.color}; padding: 16px; margin-bottom: 20px; border-radius: 8px;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span style="font-size: 24px;">${ollamaStatus.icon}</span>
+                            <div>
+                                <strong>Ollama Cloud Status:</strong> ${ollamaStatus.status === 'connected' ? 'Connected' : 'Not Connected'}
+                                <p style="margin: 4px 0 0 0; font-size: 13px; color: var(--text-secondary);">
+                                    ${ollamaStatus.status === 'connected' ? 
+                                        'AI-powered features are active and ready!' : 
+                                        'Configure Ollama Cloud to enable AI features'}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <label>Current Model</label>
+                        <div class="setting-value">${currentModel}</div>
+                        <p class="setting-help">The AI model used for diagnostics and suggestions</p>
+                    </div>
+                    
+                    <div class="ollama-setup-guide" style="background: var(--bg-tertiary); padding: 20px; border-radius: 8px; margin-top: 20px;">
+                        <h5 style="margin-top: 0;">📋 Railway Configuration Guide</h5>
+                        
+                        <p style="font-size: 14px; color: var(--text-secondary);">
+                            To enable Ollama Cloud AI, add these environment variables in Railway:
+                        </p>
+                        
+                        <div class="env-variables" style="background: var(--bg-secondary); padding: 16px; border-radius: 6px; margin: 16px 0; font-family: monospace; font-size: 13px;">
+                            <div style="margin-bottom: 8px;">
+                                <span style="color: var(--accent-blue);">OLLAMA_API_KEY</span>=
+                                <span style="color: var(--text-muted);">your_api_key_here</span>
+                            </div>
+                            <div>
+                                <span style="color: var(--accent-blue);">OLLAMA_BASE_URL</span>=
+                                <span style="color: var(--text-muted);">https://ollama.com/api</span>
+                            </div>
+                        </div>
+                        
+                        <div class="setup-steps" style="font-size: 14px;">
+                            <p><strong>Step 1:</strong> Get your API key from <a href="https://ollama.com/settings/keys" target="_blank" style="color: var(--accent-blue);">ollama.com/settings/keys</a></p>
+                            <p><strong>Step 2:</strong> Go to Railway Dashboard → Your Service → Variables</p>
+                            <p><strong>Step 3:</strong> Add OLLAMA_API_KEY with your key</p>
+                            <p><strong>Step 4:</strong> Redeploy the service</p>
+                        </div>
+                        
+                        <button class="btn-primary" onclick="window.open('https://ollama.com/settings/keys', '_blank')" style="margin-top: 16px;">
+                            🔑 Get API Key
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Test Connection -->
+                <div class="settings-section" style="margin-top: 32px;">
+                    <h4>🧪 Test Connection</h4>
+                    <button class="btn-secondary" onclick="AICentralHub.testOllamaConnection()" 
+                            ${ollamaStatus.status === 'connected' ? 'disabled' : ''}>
+                        ${ollamaStatus.status === 'connected' ? '✅ Already Connected' : '🔄 Test Ollama Connection'}
+                    </button>
+                </div>
+            </div>
+            
+            <style>
+                .ai-settings h3 { margin-bottom: 24px; }
+                .ai-settings h4 { color: var(--accent-blue); margin: 24px 0 16px 0; }
+                .setting-item { padding: 16px; background: var(--bg-secondary); border-radius: 8px; margin-bottom: 16px; }
+                .setting-value { font-weight: 600; color: var(--accent-blue); margin-top: 8px; }
+                .setting-help { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+            </style>
+        `;
+    },
+    
+    // Test Ollama connection
+    async testOllamaConnection() {
+        if (typeof OllamaCloudIntegration !== 'undefined') {
+            this.logActivity('Testing Ollama Cloud connection...', 'info', '🧪');
+            const connected = await OllamaCloudIntegration.testConnection();
+            if (connected) {
+                this.logActivity('✅ Ollama Cloud connected successfully!', 'success', '🦙');
+                alert('✅ Ollama Cloud connected successfully!\n\nAI features are now active.');
+            } else {
+                this.logActivity('❌ Ollama Cloud connection failed. Check Railway variables.', 'error', '⚠️');
+                alert('❌ Ollama Cloud connection failed.\n\nPlease:\n1. Get API key from ollama.com/settings/keys\n2. Add to Railway Dashboard → Variables\n3. Redeploy the service');
+            }
+            this.switchTab('settings'); // Refresh to show status
+        }
     }
-};
 
 // Initialize when DOM is ready
 if (document.readyState === 'loading') {

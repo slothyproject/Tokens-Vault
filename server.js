@@ -17,7 +17,7 @@ const PORT = process.env.PORT || 8080;
 
 // Ollama Cloud Configuration
 const OLLAMA_API_KEY = process.env.OLLAMA_API_KEY;
-const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'https://api.ollama.com/v1';
+const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'https://ollama.com/api';
 
 // Validate API key on startup
 if (!OLLAMA_API_KEY) {
@@ -198,8 +198,8 @@ app.get('/api/ollama/tags', async (req, res) => {
     }
 
     try {
-        // Ollama Cloud uses OpenAI-compatible endpoint: /v1/models
-        const response = await axios.get(`${OLLAMA_BASE_URL}/models`, {
+        // Ollama Cloud uses native endpoint: /api/tags
+        const response = await axios.get(`${OLLAMA_BASE_URL}/tags`, {
             headers: {
                 'Authorization': `Bearer ${OLLAMA_API_KEY}`,
                 'Content-Type': 'application/json'
@@ -241,15 +241,17 @@ app.post('/api/ollama/generate', validateGenerateRequest, async (req, res) => {
 
         console.log(`[Ollama] Generating with model: ${model}`);
 
-        // Ollama Cloud uses OpenAI-compatible endpoint: /v1/completions
+        // Ollama Cloud uses native endpoint: /api/generate
         const response = await axios.post(
-            `${OLLAMA_BASE_URL}/completions`,
+            `${OLLAMA_BASE_URL}/generate`,
             {
                 model: model,
                 prompt: prompt,
                 stream: stream,
-                temperature: options.temperature ?? 0.7,
-                max_tokens: options.max_tokens ?? 2048
+                options: {
+                    temperature: options.temperature ?? 0.7,
+                    num_predict: options.max_tokens ?? 2048
+                }
             },
             {
                 headers: {
@@ -295,15 +297,17 @@ app.post('/api/ollama/chat', validateChatRequest, async (req, res) => {
 
         console.log(`[Ollama] Chat with model: ${model}, messages: ${messages.length}`);
 
-        // Ollama Cloud uses OpenAI-compatible endpoint: /v1/chat/completions
+        // Ollama Cloud uses native endpoint: /api/chat
         const response = await axios.post(
-            `${OLLAMA_BASE_URL}/chat/completions`,
+            `${OLLAMA_BASE_URL}/chat`,
             {
                 model: model,
                 messages: messages,
                 stream: stream,
-                temperature: options.temperature ?? 0.7,
-                max_tokens: options.max_tokens ?? 2048
+                options: {
+                    temperature: options.temperature ?? 0.7,
+                    num_predict: options.max_tokens ?? 2048
+                }
             },
             {
                 headers: {

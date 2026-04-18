@@ -1175,9 +1175,6 @@ const VaultUI = {
         
         return results;
     },
-        
-        this.renderSearchResults(results, query);
-    },
     
     // Check if variable is secret
     isSecretVariable(key) {

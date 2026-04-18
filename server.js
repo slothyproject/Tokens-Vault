@@ -104,7 +104,7 @@ const validateGenerateRequest = (req, res, next) => {
         errors.push('model must be a string');
     } else if (model.length > 100) {
         errors.push('model name too long (max 100 chars)');
-    } else if (!/^[a-zA-Z0-9_\-\:\/]+$/.test(model)) {
+    } else if (!/^[a-zA-Z0-9_\-\:\/\.]+$/.test(model)) {
         errors.push('model contains invalid characters');
     }
 

@@ -17,6 +17,9 @@ const VaultCore = {
         isLocked: false
     },
 
+    // Activity listeners for cleanup
+    _activityListeners: [],
+
     // Event system for reactive updates
     events: {
         listeners: {},
@@ -60,11 +63,24 @@ const VaultCore = {
         // Reset last activity
         this.resetSessionTimeout();
         
+        // Clear any existing listeners first (prevent duplicates)
+        this.clearSessionListeners();
+        
+        // Track listeners for cleanup
+        this._activityListeners = [];
+        
         // Add event listeners for activity
         const events = ['mousedown', 'keydown', 'touchstart', 'scroll'];
         events.forEach(event => {
-            document.addEventListener(event, () => this.resetSessionTimeout(), { passive: true });
+            const listener = () => this.resetSessionTimeout();
+            this._activityListeners.push({ event, listener });
+            document.addEventListener(event, listener, { passive: true });
         });
+        
+        // Clear existing interval first
+        if (this.sessionTimeout.checkInterval) {
+            clearInterval(this.sessionTimeout.checkInterval);
+        }
         
         // Start checking interval
         this.sessionTimeout.checkInterval = setInterval(() => {
@@ -72,6 +88,16 @@ const VaultCore = {
         }, 10000); // Check every 10 seconds
         
         console.log('[VaultCore] Session timeout monitoring started');
+    },
+    
+    // Clear session event listeners
+    clearSessionListeners() {
+        if (this._activityListeners) {
+            this._activityListeners.forEach(({ event, listener }) => {
+                document.removeEventListener(event, listener);
+            });
+            this._activityListeners = [];
+        }
     },
     
     // Reset session timeout on activity
@@ -136,7 +162,15 @@ const VaultCore = {
     // Lock vault due to timeout
     lockDueToTimeout() {
         this.sessionTimeout.isLocked = true;
-        clearInterval(this.sessionTimeout.checkInterval);
+        
+        // Clear interval
+        if (this.sessionTimeout.checkInterval) {
+            clearInterval(this.sessionTimeout.checkInterval);
+            this.sessionTimeout.checkInterval = null;
+        }
+        
+        // Clear event listeners
+        this.clearSessionListeners();
         
         // Clear session
         this.lock();
@@ -147,7 +181,14 @@ const VaultCore = {
     
     // Stop session timeout monitoring
     stopSessionTimeout() {
-        clearInterval(this.sessionTimeout.checkInterval);
+        if (this.sessionTimeout.checkInterval) {
+            clearInterval(this.sessionTimeout.checkInterval);
+            this.sessionTimeout.checkInterval = null;
+        }
+        
+        // Clear event listeners
+        this.clearSessionListeners();
+        
         console.log('[VaultCore] Session timeout monitoring stopped');
     },
 
